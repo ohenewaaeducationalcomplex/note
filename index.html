@@ -1,0 +1,1897 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excel Academy - Complete School Management System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #3498db;
+            --secondary: #2c3e50;
+            --success: #27ae60;
+            --warning: #f39c12;
+            --danger: #e74c3c;
+            --light: #ecf0f1;
+            --dark: #34495e;
+            --gray: #95a5a6;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            color: #333;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1400px;
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(to right, var(--secondary), var(--primary));
+            color: white;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .logo-container {
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo {
+            width: 70px;
+            height: 70px;
+            background-color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 30px;
+            color: var(--primary);
+        }
+        
+        .school-info h1 {
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+        }
+        
+        .school-info p {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+        
+        .auth-container {
+            display: flex;
+        }
+        
+        .auth-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: 10px;
+            transition: background 0.3s;
+            display: flex;
+            align-items: center;
+        }
+        
+        .auth-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .auth-btn i {
+            margin-right: 8px;
+        }
+        
+        .main-content {
+            display: flex;
+            min-height: 700px;
+        }
+        
+        .login-section {
+            flex: 1;
+            padding: 40px;
+            background: var(--light);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .info-section {
+            flex: 1;
+            padding: 40px;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .login-tabs {
+            display: flex;
+            margin-bottom: 30px;
+            border-bottom: 1px solid var(--gray);
+        }
+        
+        .login-tab {
+            padding: 12px 25px;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--dark);
+            transition: all 0.3s;
+        }
+        
+        .login-tab.active {
+            color: var(--primary);
+            border-bottom: 3px solid var(--primary);
+        }
+        
+        .login-form {
+            display: none;
+        }
+        
+        .login-form.active {
+            display: block;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: border 0.3s;
+        }
+        
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            border-color: var(--primary);
+            outline: none;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 12px 25px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: background-color 0.3s;
+        }
+        
+        .btn:hover {
+            background-color: #2980b9;
+        }
+        
+        .btn-success {
+            background-color: var(--success);
+        }
+        
+        .btn-success:hover {
+            background-color: #219653;
+        }
+        
+        .btn-warning {
+            background-color: var(--warning);
+        }
+        
+        .btn-warning:hover {
+            background-color: #e67e22;
+        }
+        
+        .btn-danger {
+            background-color: var(--danger);
+        }
+        
+        .btn-danger:hover {
+            background-color: #c0392b;
+        }
+        
+        .info-section h2 {
+            font-size: 2rem;
+            color: var(--secondary);
+            margin-bottom: 20px;
+        }
+        
+        .info-section p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 25px;
+            color: var(--dark);
+        }
+        
+        .features {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .feature {
+            display: flex;
+            align-items: flex-start;
+        }
+        
+        .feature i {
+            font-size: 24px;
+            color: var(--primary);
+            margin-right: 15px;
+            margin-top: 5px;
+        }
+        
+        .feature div h3 {
+            font-size: 1.2rem;
+            margin-bottom: 5px;
+            color: var(--secondary);
+        }
+        
+        .portal {
+            display: none;
+            padding: 20px;
+            min-height: 700px;
+        }
+        
+        .portal.active {
+            display: block;
+        }
+        
+        .portal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .portal-title {
+            font-size: 1.8rem;
+            color: var(--secondary);
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+        }
+        
+        .user-info img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
+            border: 2px solid var(--primary);
+        }
+        
+        .dashboard-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .card {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            transition: transform 0.3s;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card h3 {
+            color: var(--secondary);
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+        
+        .card .number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        table th, table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        table th {
+            background-color: var(--light);
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        table tr:hover {
+            background-color: #f9f9f9;
+        }
+        
+        .action-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 5px;
+        }
+        
+        .btn-edit {
+            background-color: var(--warning);
+            color: white;
+        }
+        
+        .btn-delete {
+            background-color: var(--danger);
+            color: white;
+        }
+        
+        .btn-view {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .attendance-controls {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px 0;
+        }
+        
+        .attendance-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .arrival {
+            background-color: var(--success);
+            color: white;
+        }
+        
+        .departure {
+            background-color: var(--warning);
+            color: white;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .close-modal {
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--dark);
+        }
+        
+        .profile-picture {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin: 0 auto 20px;
+            display: block;
+            border: 3px solid var(--primary);
+        }
+        
+        .upload-btn {
+            display: block;
+            margin: 10px auto;
+            text-align: center;
+            background: var(--gray);
+        }
+        
+        .stats-container {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+        }
+        
+        .chart-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .content-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .content-tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--dark);
+            transition: all 0.3s;
+        }
+        
+        .content-tab.active {
+            color: var(--primary);
+            border-bottom: 3px solid var(--primary);
+        }
+        
+        .content-panel {
+            display: none;
+        }
+        
+        .content-panel.active {
+            display: block;
+        }
+        
+        .notes-container, .assignments-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .note-card, .assignment-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        
+        .note-card h3, .assignment-card h3 {
+            color: var(--secondary);
+            margin-bottom: 10px;
+        }
+        
+        .note-meta, .assignment-meta {
+            font-size: 0.9rem;
+            color: var(--gray);
+            margin-bottom: 10px;
+        }
+        
+        .assignment-image {
+            max-width: 100%;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            background: var(--secondary);
+            color: white;
+            font-size: 0.9rem;
+        }
+        
+        .auto-save-indicator {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--success);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            display: none;
+            z-index: 1001;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .features {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .dashboard-cards {
+                grid-template-columns: 1fr;
+            }
+            
+            .notes-container, .assignments-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo-container">
+                <div class="logo">
+                    <i class="fas fa-graduation-cap"></i>
+                </div>
+                <div class="school-info">
+                    <h1>Excel Academy</h1>
+                    <p>Complete School Management System</p>
+                </div>
+            </div>
+            <div class="auth-container">
+                <button class="auth-btn" id="admin-login-btn"><i class="fas fa-user-shield"></i> Admin Login</button>
+                <button class="auth-btn" id="teacher-login-btn"><i class="fas fa-chalkboard-teacher"></i> Teacher Login</button>
+                <button class="auth-btn" id="student-login-btn"><i class="fas fa-user-graduate"></i> Student Login</button>
+            </div>
+        </header>
+        
+        <div class="main-content">
+            <div class="login-section">
+                <div class="login-tabs">
+                    <div class="login-tab active" data-login="admin">Admin Login</div>
+                    <div class="login-tab" data-login="teacher">Teacher Login</div>
+                    <div class="login-tab" data-login="student">Student Login</div>
+                </div>
+                
+                <form class="login-form active" id="admin-login-form">
+                    <div class="form-group">
+                        <label for="admin-username">Username</label>
+                        <input type="text" id="admin-username" placeholder="Enter admin username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="admin-password">Password</label>
+                        <input type="password" id="admin-password" placeholder="Enter admin password" required>
+                    </div>
+                    <button type="submit" class="btn">Login as Admin</button>
+                </form>
+                
+                <form class="login-form" id="teacher-login-form">
+                    <div class="form-group">
+                        <label for="teacher-username">Username</label>
+                        <input type="text" id="teacher-username" placeholder="Enter teacher username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="teacher-password">Password</label>
+                        <input type="password" id="teacher-password" placeholder="Enter teacher password" required>
+                    </div>
+                    <button type="submit" class="btn">Login as Teacher</button>
+                </form>
+                
+                <form class="login-form" id="student-login-form">
+                    <div class="form-group">
+                        <label for="student-username">Username</label>
+                        <input type="text" id="student-username" placeholder="Enter student username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="student-password">Password</label>
+                        <input type="password" id="student-password" placeholder="Enter student password" required>
+                    </div>
+                    <button type="submit" class="btn">Login as Student</button>
+                </form>
+            </div>
+            
+            <div class="info-section">
+                <h2>Welcome to Excel Academy</h2>
+                <p>Our Complete School Management System provides a comprehensive solution for managing teacher activities, student assignments, and administrative oversight in a modern educational environment.</p>
+                
+                <div class="features">
+                    <div class="feature">
+                        <i class="fas fa-user-check"></i>
+                        <div>
+                            <h3>Attendance Tracking</h3>
+                            <p>Admins can mark teacher arrival and departure times</p>
+                        </div>
+                    </div>
+                    <div class="feature">
+                        <i class="fas fa-sticky-note"></i>
+                        <div>
+                            <h3>Lesson Notes</h3>
+                            <p>Teachers can create and manage lesson notes with guidelines</p>
+                        </div>
+                    </div>
+                    <div class="feature">
+                        <i class="fas fa-tasks"></i>
+                        <div>
+                            <h3>Assignments</h3>
+                            <p>Create, track, and grade student assignments</p>
+                        </div>
+                    </div>
+                    <div class="feature">
+                        <i class="fas fa-chart-bar"></i>
+                        <div>
+                            <h3>Analytics</h3>
+                            <p>View statistics on teacher attendance and performance</p>
+                        </div>
+                    </div>
+                    <div class="feature">
+                        <i class="fas fa-sync-alt"></i>
+                        <div>
+                            <h3>Auto-Save</h3>
+                            <p>All changes are automatically saved and synced across devices</p>
+                        </div>
+                    </div>
+                    <div class="feature">
+                        <i class="fas fa-cloud"></i>
+                        <div>
+                            <h3>Cloud Storage</h3>
+                            <p>Data is securely stored and accessible from any device</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Admin Portal -->
+        <div id="admin-portal" class="portal">
+            <div class="portal-header">
+                <h2 class="portal-title">Admin Portal</h2>
+                <div class="user-info">
+                    <img id="admin-profile-pic" src="https://i.pravatar.cc/150?img=30" alt="Admin Profile">
+                    <span id="admin-name">Admin User</span>
+                    <button class="auth-btn" id="admin-logout" style="margin-left: 15px;"><i class="fas fa-sign-out-alt"></i> Logout</button>
+                </div>
+            </div>
+            
+            <div class="dashboard-cards">
+                <div class="card">
+                    <h3>Total Teachers</h3>
+                    <div class="number" id="total-teachers">12</div>
+                </div>
+                <div class="card">
+                    <h3>Present Today</h3>
+                    <div class="number" id="present-today">9</div>
+                </div>
+                <div class="card">
+                    <h3>Classes</h3>
+                    <div class="number" id="total-classes">15</div>
+                </div>
+                <div class="card">
+                    <h3>Students</h3>
+                    <div class="number" id="total-students">245</div>
+                </div>
+            </div>
+            
+            <div class="content-tabs">
+                <div class="content-tab active" data-tab="attendance">Attendance Management</div>
+                <div class="content-tab" data-tab="teachers">Teacher Management</div>
+                <div class="content-tab" data-tab="students">Student Management</div>
+            </div>
+            
+            <div class="content-panel active" id="attendance-panel">
+                <div class="attendance-controls">
+                    <h3>Teacher Attendance Management</h3>
+                    <div>
+                        <button class="btn btn-success" id="mark-all-present">Mark All Present</button>
+                    </div>
+                </div>
+                
+                <table id="teacher-attendance-table">
+                    <thead>
+                        <tr>
+                            <th>Teacher</th>
+                            <th>Date</th>
+                            <th>Arrival</th>
+                            <th>Departure</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Attendance data will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="content-panel" id="teachers-panel">
+                <h3>Teacher Management</h3>
+                <button class="btn btn-success" id="add-teacher-btn">Add New Teacher</button>
+                
+                <table id="teacher-management-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Assigned Class</th>
+                            <th>Join Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Teacher data will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="content-panel" id="students-panel">
+                <h3>Student Management</h3>
+                <button class="btn btn-success" id="add-student-btn">Add New Student</button>
+                
+                <table id="student-management-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Student ID</th>
+                            <th>Class</th>
+                            <th>Parent Contact</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Student data will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Teacher Portal -->
+        <div id="teacher-portal" class="portal">
+            <div class="portal-header">
+                <h2 class="portal-title">Teacher Portal</h2>
+                <div class="user-info">
+                    <img id="teacher-profile-pic" src="https://i.pravatar.cc/150?img=5" alt="Teacher Profile">
+                    <span id="teacher-name">Sarah Johnson</span>
+                    <button class="auth-btn" id="teacher-logout" style="margin-left: 15px;"><i class="fas fa-sign-out-alt"></i> Logout</button>
+                </div>
+            </div>
+            
+            <div class="dashboard-cards">
+                <div class="card">
+                    <h3>My Class</h3>
+                    <div class="number" id="teacher-class">KG 2</div>
+                </div>
+                <div class="card">
+                    <h3>Students</h3>
+                    <div class="number" id="teacher-students">24</div>
+                </div>
+                <div class="card">
+                    <h3>Lesson Notes</h3>
+                    <div class="number" id="teacher-notes">8</div>
+                </div>
+                <div class="card">
+                    <h3>Assignments</h3>
+                    <div class="number" id="teacher-assignments">5</div>
+                </div>
+            </div>
+            
+            <div class="content-tabs">
+                <div class="content-tab active" data-tab="attendance">My Attendance</div>
+                <div class="content-tab" data-tab="notes">Lesson Notes</div>
+                <div class="content-tab" data-tab="assignments">Assignments</div>
+                <div class="content-tab" data-tab="students">My Students</div>
+            </div>
+            
+            <div class="content-panel active" id="teacher-attendance-panel">
+                <h3>My Attendance Record</h3>
+                <table id="my-attendance-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Arrival Time</th>
+                            <th>Departure Time</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Teacher's attendance data will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="content-panel" id="teacher-notes-panel">
+                <h3>My Lesson Notes</h3>
+                <button class="btn btn-success" id="add-note-btn">Add New Lesson Note</button>
+                
+                <div class="notes-container" id="teacher-notes-container">
+                    <!-- Lesson notes will be populated by JavaScript -->
+                </div>
+            </div>
+            
+            <div class="content-panel" id="teacher-assignments-panel">
+                <h3>My Assignments</h3>
+                <button class="btn btn-success" id="add-assignment-btn">Add New Assignment</button>
+                
+                <div class="assignments-container" id="teacher-assignments-container">
+                    <!-- Assignments will be populated by JavaScript -->
+                </div>
+            </div>
+            
+            <div class="content-panel" id="teacher-students-panel">
+                <h3>My Class Students</h3>
+                <table id="class-students-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Student ID</th>
+                            <th>Parent Contact</th>
+                            <th>Performance</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Class students will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Student Portal -->
+        <div id="student-portal" class="portal">
+            <div class="portal-header">
+                <h2 class="portal-title">Student Portal</h2>
+                <div class="user-info">
+                    <img id="student-profile-pic" src="https://i.pravatar.cc/150?img=12" alt="Student Profile">
+                    <span id="student-name">Emma Wilson</span>
+                    <button class="auth-btn" id="student-logout" style="margin-left: 15px;"><i class="fas fa-sign-out-alt"></i> Logout</button>
+                </div>
+            </div>
+            
+            <div class="dashboard-cards">
+                <div class="card">
+                    <h3>My Class</h3>
+                    <div class="number" id="student-class">KG 2</div>
+                </div>
+                <div class="card">
+                    <h3>My Teacher</h3>
+                    <div class="number" id="student-teacher">Ms. Johnson</div>
+                </div>
+                <div class="card">
+                    <h3>Pending Assignments</h3>
+                    <div class="number" id="student-pending">3</div>
+                </div>
+                <div class="card">
+                    <h3>Completed</h3>
+                    <div class="number" id="student-completed">7</div>
+                </div>
+            </div>
+            
+            <h3>My Assignments</h3>
+            <div class="assignments-container" id="student-assignments-container">
+                <!-- Student assignments will be populated by JavaScript -->
+            </div>
+        </div>
+        
+        <footer>
+            <p>Excel Academy School Management System &copy; 2023. All rights reserved.</p>
+            <p>Data is automatically saved and synced across all devices with access to this system.</p>
+        </footer>
+    </div>
+
+    <!-- Add Teacher Modal -->
+    <div id="add-teacher-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add New Teacher</h3>
+                <span class="close-modal">&times;</span>
+            </div>
+            <form id="teacher-form">
+                <div class="form-group">
+                    <label for="teacher-name">Full Name</label>
+                    <input type="text" id="teacher-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="teacher-email">Email</label>
+                    <input type="email" id="teacher-email" required>
+                </div>
+                <div class="form-group">
+                    <label for="teacher-password">Password</label>
+                    <input type="password" id="teacher-password" required>
+                </div>
+                <div class="form-group">
+                    <label for="teacher-class">Assign to Class</label>
+                    <select id="teacher-class">
+                        <option value="">Select Class</option>
+                        <option value="nursery1">Nursery 1</option>
+                        <option value="nursery2">Nursery 2</option>
+                        <option value="kg1">KG 1</option>
+                        <option value="kg2">KG 2</option>
+                        <option value="primary1">Primary 1</option>
+                        <option value="primary2">Primary 2</option>
+                        <option value="primary3">Primary 3</option>
+                        <option value="primary4">Primary 4</option>
+                        <option value="primary5">Primary 5</option>
+                        <option value="primary6">Primary 6</option>
+                        <option value="jhs1">JHS 1</option>
+                        <option value="jhs2">JHS 2</option>
+                        <option value="jhs3">JHS 3</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Profile Picture</label>
+                    <img id="teacher-preview" class="profile-picture" src="https://i.pravatar.cc/150?img=7" alt="Teacher Preview">
+                    <input type="file" id="teacher-photo" accept="image/*">
+                    <button type="button" class="btn upload-btn" id="upload-teacher-photo">Upload Photo</button>
+                </div>
+                <button type="submit" class="btn btn-success">Add Teacher</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Lesson Note Modal -->
+    <div id="add-note-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add Lesson Note</h3>
+                <span class="close-modal">&times;</span>
+            </div>
+            <form id="note-form">
+                <div class="form-group">
+                    <label for="note-title">Title</label>
+                    <input type="text" id="note-title" required>
+                </div>
+                <div class="form-group">
+                    <label for="note-subject">Subject</label>
+                    <input type="text" id="note-subject" required>
+                </div>
+                <div class="form-group">
+                    <label for="note-class">For Class</label>
+                    <select id="note-class" required>
+                        <option value="">Select Class</option>
+                        <option value="nursery1">Nursery 1</option>
+                        <option value="nursery2">Nursery 2</option>
+                        <option value="kg1">KG 1</option>
+                        <option value="kg2">KG 2</option>
+                        <option value="primary1">Primary 1</option>
+                        <option value="primary2">Primary 2</option>
+                        <option value="primary3">Primary 3</option>
+                        <option value="primary4">Primary 4</option>
+                        <option value="primary5">Primary 5</option>
+                        <option value="primary6">Primary 6</option>
+                        <option value="jhs1">JHS 1</option>
+                        <option value="jhs2">JHS 2</option>
+                        <option value="jhs3">JHS 3</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="note-content">Lesson Content</label>
+                    <textarea id="note-content" rows="10" required placeholder="Enter your lesson content here..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="note-guidelines">Teaching Guidelines</label>
+                    <textarea id="note-guidelines" rows="5" placeholder="Enter any teaching guidelines or instructions..."></textarea>
+                </div>
+                <button type="submit" class="btn btn-success">Save Lesson Note</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Assignment Modal -->
+    <div id="add-assignment-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add Assignment</h3>
+                <span class="close-modal">&times;</span>
+            </div>
+            <form id="assignment-form">
+                <div class="form-group">
+                    <label for="assignment-title">Title</label>
+                    <input type="text" id="assignment-title" required>
+                </div>
+                <div class="form-group">
+                    <label for="assignment-subject">Subject</label>
+                    <input type="text" id="assignment-subject" required>
+                </div>
+                <div class="form-group">
+                    <label for="assignment-class">For Class</label>
+                    <select id="assignment-class" required>
+                        <option value="">Select Class</option>
+                        <option value="nursery1">Nursery 1</option>
+                        <option value="nursery2">Nursery 2</option>
+                        <option value="kg1">KG 1</option>
+                        <option value="kg2">KG 2</option>
+                        <option value="primary1">Primary 1</option>
+                        <option value="primary2">Primary 2</option>
+                        <option value="primary3">Primary 3</option>
+                        <option value="primary4">Primary 4</option>
+                        <option value="primary5">Primary 5</option>
+                        <option value="primary6">Primary 6</option>
+                        <option value="jhs1">JHS 1</option>
+                        <option value="jhs2">JHS 2</option>
+                        <option value="jhs3">JHS 3</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="assignment-description">Description</label>
+                    <textarea id="assignment-description" rows="5" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="assignment-due-date">Due Date</label>
+                    <input type="date" id="assignment-due-date" required>
+                </div>
+                <div class="form-group">
+                    <label for="assignment-image">Assignment Image (Optional)</label>
+                    <input type="file" id="assignment-image" accept="image/*">
+                </div>
+                <button type="submit" class="btn btn-success">Save Assignment</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Auto-save Indicator -->
+    <div class="auto-save-indicator" id="auto-save-indicator">
+        <i class="fas fa-check-circle"></i> Changes saved successfully!
+    </div>
+
+    <script>
+        // Sample data for demonstration
+        const sampleData = {
+            admin: { username: "admin", password: "admin123", name: "Admin User" },
+            teachers: [
+                { 
+                    id: 1, 
+                    username: "johnsmith", 
+                    password: "teacher123", 
+                    name: "John Smith", 
+                    class: "Primary 5",
+                    profilePic: "https://i.pravatar.cc/150?img=1"
+                },
+                { 
+                    id: 2, 
+                    username: "sarahjohnson", 
+                    password: "teacher123", 
+                    name: "Sarah Johnson", 
+                    class: "KG 2",
+                    profilePic: "https://i.pravatar.cc/150?img=5"
+                },
+                { 
+                    id: 3, 
+                    username: "michaelbrown", 
+                    password: "teacher123", 
+                    name: "Michael Brown", 
+                    class: "JHS 2",
+                    profilePic: "https://i.pravatar.cc/150?img=10"
+                }
+            ],
+            students: [
+                {
+                    id: 1,
+                    username: "emmawilson",
+                    password: "student123",
+                    name: "Emma Wilson",
+                    class: "KG 2",
+                    teacher: "Sarah Johnson",
+                    profilePic: "https://i.pravatar.cc/150?img=12"
+                },
+                {
+                    id: 2,
+                    username: "noahthompson",
+                    password: "student123",
+                    name: "Noah Thompson",
+                    class: "KG 2",
+                    teacher: "Sarah Johnson",
+                    profilePic: "https://i.pravatar.cc/150?img=15"
+                }
+            ],
+            attendance: [
+                { teacherId: 1, date: "2023-10-15", arrival: "07:45 AM", departure: "03:30 PM", status: "Present" },
+                { teacherId: 2, date: "2023-10-15", arrival: "08:00 AM", departure: "--:--", status: "In School" },
+                { teacherId: 3, date: "2023-10-15", arrival: "--:--", departure: "--:--", status: "Absent" }
+            ],
+            lessonNotes: [
+                {
+                    id: 1,
+                    teacherId: 2,
+                    title: "Introduction to Numbers",
+                    subject: "Mathematics",
+                    class: "KG 2",
+                    content: "Today we will learn about numbers 1-10. We will count objects, recognize numerals, and practice writing numbers.",
+                    guidelines: "Use visual aids like number cards. Encourage participation with counting games.",
+                    date: "2023-10-15"
+                },
+                {
+                    id: 2,
+                    teacherId: 2,
+                    title: "Basic Phonics - Letter A",
+                    subject: "English",
+                    class: "KG 2",
+                    content: "Introduction to the letter A. We will learn its sound, words that start with A, and practice writing the letter.",
+                    guidelines: "Use flashcards with pictures. Practice pronunciation with repetition.",
+                    date: "2023-10-14"
+                }
+            ],
+            assignments: [
+                {
+                    id: 1,
+                    teacherId: 2,
+                    title: "Counting Practice",
+                    subject: "Mathematics",
+                    class: "KG 2",
+                    description: "Count the objects in each group and write the correct number.",
+                    dueDate: "2023-10-20",
+                    image: null,
+                    date: "2023-10-15"
+                },
+                {
+                    id: 2,
+                    teacherId: 2,
+                    title: "Letter A Worksheet",
+                    subject: "English",
+                    class: "KG 2",
+                    description: "Practice writing the letter A and circle pictures that start with A sound.",
+                    dueDate: "2023-10-18",
+                    image: null,
+                    date: "2023-10-14"
+                }
+            ]
+        };
+
+        // DOM elements
+        const loginTabs = document.querySelectorAll('.login-tab');
+        const loginForms = document.querySelectorAll('.login-form');
+        const adminLoginForm = document.getElementById('admin-login-form');
+        const teacherLoginForm = document.getElementById('teacher-login-form');
+        const studentLoginForm = document.getElementById('student-login-form');
+        const adminPortal = document.getElementById('admin-portal');
+        const teacherPortal = document.getElementById('teacher-portal');
+        const studentPortal = document.getElementById('student-portal');
+        const adminLogoutBtn = document.getElementById('admin-logout');
+        const teacherLogoutBtn = document.getElementById('teacher-logout');
+        const studentLogoutBtn = document.getElementById('student-logout');
+        const addTeacherBtn = document.getElementById('add-teacher-btn');
+        const addTeacherModal = document.getElementById('add-teacher-modal');
+        const addNoteBtn = document.getElementById('add-note-btn');
+        const addNoteModal = document.getElementById('add-note-modal');
+        const addAssignmentBtn = document.getElementById('add-assignment-btn');
+        const addAssignmentModal = document.getElementById('add-assignment-modal');
+        const closeModalBtns = document.querySelectorAll('.close-modal');
+        const teacherForm = document.getElementById('teacher-form');
+        const noteForm = document.getElementById('note-form');
+        const assignmentForm = document.getElementById('assignment-form');
+        const adminLoginBtn = document.getElementById('admin-login-btn');
+        const teacherLoginBtn = document.getElementById('teacher-login-btn');
+        const studentLoginBtn = document.getElementById('student-login-btn');
+        const contentTabs = document.querySelectorAll('.content-tab');
+        const contentPanels = document.querySelectorAll('.content-panel');
+        const autoSaveIndicator = document.getElementById('auto-save-indicator');
+
+        // Current user tracking
+        let currentUser = null;
+        let currentStudent = null;
+
+        // Initialize the application
+        function init() {
+            // Load data from localStorage or initialize with sample data
+            if (!localStorage.getItem('schoolData')) {
+                localStorage.setItem('schoolData', JSON.stringify(sampleData));
+            }
+            
+            // Set up event listeners
+            setupEventListeners();
+            
+            // Check if we need to show login
+            checkAuthentication();
+        }
+
+        // Set up all event listeners
+        function setupEventListeners() {
+            // Login tab switching
+            loginTabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const loginType = tab.getAttribute('data-login');
+                    
+                    // Update active tab
+                    loginTabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    
+                    // Show corresponding form
+                    loginForms.forEach(form => form.classList.remove('active'));
+                    document.getElementById(`${loginType}-login-form`).classList.add('active');
+                });
+            });
+
+            // Content tab switching
+            contentTabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const tabName = tab.getAttribute('data-tab');
+                    
+                    // Update active tab
+                    contentTabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    
+                    // Show corresponding panel
+                    contentPanels.forEach(panel => panel.classList.remove('active'));
+                    document.getElementById(`${tabName}-panel`).classList.add('active');
+                });
+            });
+
+            // Login forms
+            adminLoginForm.addEventListener('submit', handleAdminLogin);
+            teacherLoginForm.addEventListener('submit', handleTeacherLogin);
+            studentLoginForm.addEventListener('submit', handleStudentLogin);
+
+            // Logout buttons
+            adminLogoutBtn.addEventListener('click', handleLogout);
+            teacherLogoutBtn.addEventListener('click', handleLogout);
+            studentLogoutBtn.addEventListener('click', handleLogout);
+
+            // Quick login buttons
+            adminLoginBtn.addEventListener('click', () => switchLoginTab('admin'));
+            teacherLoginBtn.addEventListener('click', () => switchLoginTab('teacher'));
+            studentLoginBtn.addEventListener('click', () => switchLoginTab('student'));
+
+            // Modal buttons
+            addTeacherBtn.addEventListener('click', () => showModal(addTeacherModal));
+            addNoteBtn.addEventListener('click', () => showModal(addNoteModal));
+            addAssignmentBtn.addEventListener('click', () => showModal(addAssignmentModal));
+
+            // Close modals
+            closeModalBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.modal').forEach(modal => {
+                        modal.style.display = 'none';
+                    });
+                });
+            });
+
+            // Form submissions
+            teacherForm.addEventListener('submit', addTeacher);
+            noteForm.addEventListener('submit', addLessonNote);
+            assignmentForm.addEventListener('submit', addAssignment);
+
+            // Attendance actions
+            document.getElementById('mark-all-present').addEventListener('click', markAllPresent);
+            
+            // Auto-save simulation for form inputs
+            setupAutoSave();
+        }
+
+        // Switch login tab
+        function switchLoginTab(loginType) {
+            loginTabs.forEach(t => t.classList.remove('active'));
+            document.querySelector(`.login-tab[data-login="${loginType}"]`).classList.add('active');
+            
+            loginForms.forEach(form => form.classList.remove('active'));
+            document.getElementById(`${loginType}-login-form`).classList.add('active');
+        }
+
+        // Show modal
+        function showModal(modal) {
+            modal.style.display = 'flex';
+        }
+
+        // Check authentication status
+        function checkAuthentication() {
+            // Check if user is already logged in (from localStorage)
+            const savedUser = localStorage.getItem('currentUser');
+            const savedStudent = localStorage.getItem('currentStudent');
+            
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                if (currentUser.isAdmin) {
+                    showAdminPortal();
+                } else {
+                    showTeacherPortal();
+                }
+            } else if (savedStudent) {
+                currentStudent = JSON.parse(savedStudent);
+                showStudentPortal();
+            }
+        }
+
+        // Handle admin login
+        function handleAdminLogin(e) {
+            e.preventDefault();
+            const username = document.getElementById('admin-username').value;
+            const password = document.getElementById('admin-password').value;
+            const schoolData = JSON.parse(localStorage.getItem('schoolData'));
+            
+            if (username === schoolData.admin.username && password === schoolData.admin.password) {
+                currentUser = { ...schoolData.admin, isAdmin: true };
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                showAdminPortal();
+            } else {
+                alert('Invalid admin credentials!');
+            }
+        }
+
+        // Handle teacher login
+        function handleTeacherLogin(e) {
+            e.preventDefault();
+            const username = document.getElementById('teacher-username').value;
+            const password = document.getElementById('teacher-password').value;
+            const schoolData = JSON.parse(localStorage.getItem('schoolData'));
+            
+            const teacher = schoolData.teachers.find(t => t.username === username && t.password === password);
+            
+            if (teacher) {
+                currentUser = teacher;
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                showTeacherPortal();
+            } else {
+                alert('Invalid teacher credentials!');
+            }
+        }
+
+        // Handle student login
+        function handleStudentLogin(e) {
+            e.preventDefault();
+            const username = document.getElementById('student-username').value;
+            const password = document.getElementById('student-password').value;
+            const schoolData = JSON.parse(localStorage.getItem('schoolData'));
+            
+            const student = schoolData.students.find(s => s.username === username && s.password === password);
+            
+            if (student) {
+                currentStudent = student;
+                localStorage.setItem('currentStudent', JSON.stringify(currentStudent));
+                showStudentPortal();
+            } else {
+                alert('Invalid student credentials!');
+            }
+        }
+
+        // Handle logout
+        function handleLogout() {
+            currentUser = null;
+            currentStudent = null;
+            localStorage.removeItem('currentUser');
+            localStorage.removeItem('currentStudent');
+            
+            // Hide all portals
+            adminPortal.classList.remove('active');
+            teacherPortal.classList.remove('active');
+            studentPortal.classList.remove('active');
+            
+            // Show login section
+            document.querySelector('.main-content').style.display = 'flex';
+            
+            // Reset forms
+            adminLoginForm.reset();
+            teacherLoginForm.reset();
+            studentLoginForm.reset();
+        }
+
+        // Show admin portal
+        function showAdminPortal() {
+            document.querySelector('.main-content').style.display = 'none';
+            adminPortal.classList.add('active');
+            document.getElementById('admin-name').textContent = currentUser.name;
+            
+            // Load admin data
+            loadAdminData();
+        }
+
+        // Show teacher portal
+        function showTeacherPortal() {
+            document.querySelector('.main-content').style.display = 'none';
+            teacherPortal.classList.add('active');
+            document.getElementById('teacher-name').textContent = currentUser.name;
+            document.getElementById('teacher-profile-pic').src = currentUser.profilePic;
+            
+            // Load teacher data
+            loadTeacherData();
+        }
+
+        // Show student portal
+        function showStudentPortal() {
+            document.querySelector('.main-content').style.display = 'none';
+            studentPortal.classList.add('active');
+            document.getElementById('student-name').textContent = currentStudent.name;
+            document.getElementById('student-profile-pic').src = currentStudent.profilePic;
+            document.getElementById('student-class').textContent = currentStudent.class;
+            document.getElementById('student-teacher').textContent = currentStudent.teacher;
+            
+            // Load student data
+            loadStudentData();
+        }
+
+        // Load admin data
+        function loadAdminData() {
+            const schoolData = JSON.parse(localStorage.getItem('schoolData'));
+            
+            // Update statistics
+            document.getElementById('total-teachers').textContent = schoolData.teachers.length;
+            document.getElementById('total-students').textContent = schoolData.students.length;
+            
+            const today = new Date().toDateString();
+            const presentToday = schoolData.attendance.filter(a => 
+                a.date === today && a.arrivalTime
+            ).length;
+            document.getElementById('present-today').textContent = presentToday;
+            
+            // Load teacher attendance table
+            const attendanceTable = document.getElementById('teacher-attendance-table').querySelector('tbody');
+            attendanceTable.innerHTML = '';
+            
+            schoolData.attendance.forEach(record => {
+                const teacher = schoolData.teachers.find(t => t.id === record.teacherId);
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${teacher ? teacher.name : 'Unknown'}</td>
+                    <td>${record.date}</td>
+                    <td>${record.arrival || '--:--'}</td>
+                    <td>${record.departure || '--:--'}</td>
+                    <td><span style="color: ${getStatusColor(record.status)};">${record.status}</span></td>
+                    <td>
+                        <button class="action-btn arrival" onclick="markAttendance(${record.teacherId}, 'arrival')">Arrival</button>
+                        <button class="action-btn departure" onclick="markAttendance(${record.teacherId}, 'departure')">Departure</button>
+                        <button class="action-btn btn-delete" onclick="deleteAttendance(${record.teacherId}, '${record.date}')">Delete</button>
+                    </td>
+                `;
+                attendanceTable.appendChild(row);
+            });
+            
+            // Load teacher management table
+            const teacherTable = document.getElementById('teacher-management-table').querySelector('tbody');
+            teacherTable.innerHTML = '';
+            
+            schoolData.teachers.forEach(teacher => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${teacher.name}</td>
+                    <td>${teacher.email || 'N/A'}</td>
+                    <td>${teacher.class}</td>
+                    <td>${teacher.joinDate || 'N/A'}</td>
+                    <td>
+                        <button class="action-btn btn-edit" onclick="editTeacher(${teacher.id})">Edit</button>
+                        <button class="action-btn btn-delete" onclick="deleteTeacher(${teacher.id})">Delete</button>
+                    </td>
+                `;
+                teacherTable.appendChild(row);
+            });
+            
+            // Load student management table
+            const studentTable = document.getElementById('student-management-table').querySelector('tbody');
+            studentTable.innerHTML = '';
+            
+            schoolData.students.forEach(student => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${student.name}</td>
+                    <td>${student.username}</td>
+                    <td>${student.class}</td>
+                    <td>${student.parentContact || 'N/A'}</td>
+                    <td>
+                        <button class="action-btn btn-edit" onclick="editStudent(${student.id})">Edit</button>
+                        <button class="action-btn btn-delete" onclick="deleteStudent(${student.id})">Delete</button>
+                    </td>
+                `;
+                studentTable.appendChild(row);
+            });
+        }
+
+        // Load teacher data
+        function loadTeacherData() {
+            const schoolData = JSON.parse(localStorage.getItem('schoolData'));
+            
+            // Update teacher statistics
+            document.getElementById('teacher-class').textContent = currentUser.class;
+            
+            const classStudents = schoolData.students.filter(s => s.class === currentUser.class);
+            document.getElementById('teacher-students').textContent = classStudents.length;
+            
+            const teacherNotes = schoolData.lessonNotes.filter(n => n.teacherId === currentUser.id);
+            document.getElementById('teacher-notes').textContent = teacherNotes.length;
+            
+            const teacherAssignments = schoolData.assignments.filter(a => a.teacherId === currentUser.id);
+            document.getElementById('teacher-assignments').textContent = teacherAssignments.length;
+            
+            // Load teacher attendance
+            const attendanceTable = document.getElementById('my-attendance-table').querySelector('tbody');
+            attendanceTable.innerHTML = '';
+            
+            const teacherAttendance = schoolData.attendance.filter(a => a.teacherId === currentUser.id);
+            teacherAttendance.forEach(record => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${record.date}</td>
+                    <td>${record.arrival || 'Not recorded'}</td>
+                    <td>${record.departure || 'Not recorded'}</td>
+                    <td><span style="color: ${getStatusColor(record.status)};">${record.status}</span></td>
+                `;
+                attendanceTable.appendChild(row);
+            });
+            
+            // Load lesson notes
+            const notesContainer = document.getElementById('teacher-notes-container');
+            notesContainer.innerHTML = '';
+            
+            teacherNotes.forEach(note => {
+                const noteCard = document.createElement('div');
+                noteCard.className = 'note-card';
+                noteCard.innerHTML = `
+                    <h3>${note.title}</h3>
+                    <div class="note-meta">
+                        <strong>Subject:</strong> ${note.subject} | 
+                        <strong>Class:</strong> ${note.class} | 
+                        <strong>Date:</strong> ${note.date}
+                    </div>
+                    <p>${note.content.substring(0, 100)}...</p>
+                    <div style="margin-top: 15px;">
+                        <button class="action-btn btn-view" onclick="viewNote(${note.id})">View</button>
+                        <button class="action-btn btn-edit" onclick="editNote(${note.id})">Edit</button>
+                        <button class="action-btn btn-delete" onclick="deleteNote(${note.id})">Delete</button>
+                    </div>
+                `;
+                notesContainer.appendChild(noteCard);
+            });
+            
+            // Load assignments
+            const assignmentsContainer = document.getElementById('teacher-assignments-container');
+            assignmentsContainer.innerHTML = '';
+            
+            teacherAssignments.forEach(assignment => {
+                const assignmentCard = document.createElement('div');
+                assignmentCard.className = 'assignment-card';
+                assignmentCard.innerHTML = `
+                    <h3>${assignment.title}</h3>
+                    <div class="assignment-meta">
+                        <strong>Subject:</strong> ${assignment.subject} | 
+                        <strong>Class:</strong> ${assignment.class} | 
+                        <strong>Due:</strong> ${assignment.dueDate}
+                    </div>
+                    <p>${assignment.description.substring(0, 100)}...</p>
+                    <div style="margin-top: 15px;">
+                        <button class="action-btn btn-view" onclick="viewAssignment(${assignment.id})">View</button>
+                        <button class="action-btn btn-edit" onclick="editAssignment(${assignment.id})">Edit</button>
+                        <button class="action-btn btn-delete" onclick="deleteAssignment(${assignment.id})">Delete</button>
+                    </div>
+                `;
+                assignmentsContainer.appendChild(assignmentCard);
+            });
+            
+            // Load class students
+            const studentsTable = document.getElementById('class-students-table').querySelector('tbody');
+            studentsTable.innerHTML = '';
+            
+            classStudents.forEach(student => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${student.name}</td>
+                    <td>${student.username}</td>
+                    <td>${student.parentContact || 'N/A'}</td>
+                    <td>${student.performance || 'N/A'}</td>
+                `;
+                studentsTable.appendChild(row);
+            });
+        }
+
+        // Load student data
+        function loadStudentData() {
+            const schoolData = JSON.parse(localStorage.getItem('schoolData'));
+            
+            // Update student statistics
+            const studentAssignments = schoolData.assignments.filter(a => a.class === currentStudent.class);
+            const pendingAssignments = studentAssignments.filter(a => new Date(a.dueDate) > new Date());
+            
+            document.getElementById('student-pending').textContent = pendingAssignments.length;
+            document.getElementById('student-completed').textContent = studentAssignments.length - pendingAssignments.length;
+            
+            // Load student assignments
+            const assignmentsContainer = document.getElementById('student-assignments-container');
+            assignmentsContainer.innerHTML = '';
+            
+            studentAssignments.forEach(assignment => {
+                const assignmentCard = document.createElement('div');
+                assignmentCard.className = 'assignment-card';
+                assignmentCard.innerHTML = `
+                    <h3>${assignment.title}</h3>
+                    <div class="assignment-meta">
+                        <strong>Subject:</strong> ${assignment.subject} | 
+                        <strong>Due Date:</strong> ${assignment.dueDate} | 
+                        <strong>Status:</strong> <span style="color: ${new Date(assignment.dueDate) > new Date() ? 'green' : 'red'};">${new Date(assignment.dueDate) > new Date() ? 'Pending' : 'Overdue'}</span>
+                    </div>
+                    <p>${assignment.description}</p>
+                    ${assignment.image ? `<img src="${assignment.image}" class="assignment-image" alt="Assignment Image">` : ''}
+                    <div style="margin-top: 15px;">
+                        <button class="action-btn btn-view" onclick="viewAssignment(${assignment.id})">View Details</button>
+                    </div>
+                `;
+                assignmentsContainer.appendChild(assignmentCard);
+            });
+        }
+
+        // Add new teacher
+        function addTeacher(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('teacher-name').value;
+            const email = document.getElementById('teacher-email').value;
+            const password = document.getElementById('teacher-password').value;
+            const assignedClass = document.getElementById('teacher-class').value;
+            const profilePic = document.getElementById('teacher-preview').src;
+            
+            const schoolData = JSON.parse(localStorage.getItem('schoolData'));
+            
+            const newTeacher = {
+                id: schoolData.teachers.length + 1,
+                username: name.toLowerCase().replace(/\s+/g, ''),
+                password: password,
+                name: name,
+                email: email,
+                class: assignedClass,
+                profilePic: profilePic,
+                joinDate: new Date().toISOString().split('T')[0]
+            };
+            
+            schoolData.teachers.push(newTeacher);
+            localStorage.setItem('schoolData', JSON.stringify(schoolData));
+            
+            showAutoSaveIndicator();
+            alert('Teacher added successfully!');
+            addTeacherModal.style.display = 'none';
+            teacherForm.reset();
+            
+            // Reload admin data if admin is logged in
+            if (currentUser && currentUser.isAdmin) {
+                loadAdminData();
+            }
+        }
+
+        // Add lesson note
+        function addLessonNote(e) {
+            e.preventDefault();
+            
+            const title = document.getElementById('note-title').value;
+            const subject = document.getElementById('note-subject').value;
+            const noteClass = document.getElementById('note-class').value;
+            const content = document.getElementById('note-content').value;
+            const guidelines = document.getElementById('note-guidelines').value;
+            
+            const schoolData = JSON.parse(localStorage.getItem('schoolData'));
+            
+            const newNote = {
+                id: schoolData.lessonNotes.length + 1,
+                teacherId: currentUser.id,
+                title: title,
+                subject: subject,
+                class: noteClass,
+                content: content,
+                guidelines: guidelines,
+                date: new Date().toISOString().split('T')[0]
+            };
+            
+            schoolData.lessonNotes.push(newNote);
+            localStorage.setItem('schoolData', JSON.stringify(schoolData));
+            
+            showAutoSaveIndicator();
+            alert('Lesson note added successfully!');
+            addNoteModal.style.display = 'none';
+            noteForm.reset();
+            
+            // Reload teacher data if teacher is logged in
+            if (currentUser && !currentUser.isAdmin) {
+                loadTeacherData();
+            }
+        }
+
+        // Add assignment
+        function addAssignment(e) {
+            e.preventDefault();
+            
+            const title = document.getElementById('assignment-title').value;
+            const subject = document.getElementById('assignment-subject').value;
+            const assignmentClass = document.getElementById('assignment-class').value;
+            const description = document.getElementById('assignment-description').value;
+            const dueDate = document.getElementById('assignment-due-date').value;
+            
+            const schoolData = JSON.parse(localStorage.getItem('schoolData'));
+            
+            const newAssignment = {
+                id: schoolData.assignments.length + 1,
+                teacherId: currentUser.id,
+                title: title,
+                subject: subject,
+                class: assignmentClass,
+                description: description,
+                dueDate: dueDate,
+                image: null, // In a real app, you would handle image upload
+                date: new Date().toISOString().split('T')[0]
+            };
+            
+            schoolData.assignments.push(newAssignment);
+            localStorage.setItem('schoolData', JSON.stringify(schoolData));
+            
+            showAutoSaveIndicator();
+            alert('Assignment added successfully!');
+            addAssignmentModal.style.display = 'none';
+            assignmentForm.reset();
+            
+            // Reload teacher data if teacher is logged in
+            if (currentUser && !currentUser.isAdmin) {
+                loadTeacherData();
+            }
+        }
+
+        // Mark all teachers as present
+        function markAllPresent() {
+            const schoolData = JSON.parse(localStorage.getItem('schoolData'));
+            const today = new Date().toDateString();
+            const currentTime = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            
+            schoolData.teachers.forEach(teacher => {
+                // Check if attendance already exists for today
+                const existingRecord = schoolData.attendance.find(a => 
+                    a.teacherId === teacher.id && a.date === today
+                );
+                
+                if (existingRecord) {
+                    if (!existingRecord.arrival) {
+                        existingRecord.arrival = currentTime;
+                        existingRecord.status = 'In School';
+                    }
+                } else {
+                    schoolData.attendance.push({
+                        teacherId: teacher.id,
+                        date: today,
+                        arrival: currentTime,
+                        departure: null,
+                        status: 'In School'
+                    });
+                }
+            });
+            
+            localStorage.setItem('schoolData', JSON.stringify(schoolData));
+            showAutoSaveIndicator();
+            alert('All teachers marked as present!');
+            
+            // Reload admin data if admin is logged in
+            if (currentUser && currentUser.isAdmin) {
+                loadAdminData();
+            }
+        }
+
+        // Mark attendance for a specific teacher
+        function markAttendance(teacherId, type) {
+            const schoolData = JSON.parse(localStorage.getItem('schoolData'));
+            const today = new Date().toDateString();
+            const currentTime = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            
+            // Find or create attendance record for today
+            let record = schoolData.attendance.find(a => 
+                a.teacherId === teacherId && a.date === today
+            );
+            
+            if (!record) {
+                record = {
+                    teacherId: teacherId,
+                    date: today,
+                    arrival: null,
+                    departure: null,
+                    status: 'Absent'
+                };
+                schoolData.attendance.push(record);
+            }
+            
+            if (type === 'arrival') {
+                record.arrival = currentTime;
+                record.status = record.departure ? 'Present' : 'In School';
+            } else if (type === 'departure') {
+                record.departure = currentTime;
+                record.status = record.arrival ? 'Present' : 'Left';
+            }
+            
+            localStorage.setItem('schoolData', JSON.stringify(schoolData));
+            showAutoSaveIndicator();
+            
+            const teacher = schoolData.teachers.find(t => t.id === teacherId);
+            alert(`Marked ${type} for ${teacher.name} at ${currentTime}`);
+            
+            // Reload admin data if admin is logged in
+            if (currentUser && currentUser.isAdmin) {
+                loadAdminData();
+            }
+        }
+
+        // Delete attendance record
+        function deleteAttendance(teacherId, date) {
+            if (confirm('Are you sure you want to delete this attendance record?')) {
+                const schoolData = JSON.parse(localStorage.getItem('schoolData'));
+                schoolData.attendance = schoolData.attendance.filter(a => 
+                    !(a.teacherId === teacherId && a.date === date)
+                );
+                
+                localStorage.setItem('schoolData', JSON.stringify(schoolData));
+                showAutoSaveIndicator();
+                
+                // Reload admin data if admin is logged in
+                if (currentUser && currentUser.isAdmin) {
+                    loadAdminData();
+                }
+            }
+        }
+
+        // Set up auto-save for form inputs
+        function setupAutoSave() {
+            // Auto-save for text inputs after 2 seconds of inactivity
+            const inputs = document.querySelectorAll('input, textarea, select');
+            let saveTimeout;
+            
+            inputs.forEach(input => {
+                input.addEventListener('input', () => {
+                    clearTimeout(saveTimeout);
+                    saveTimeout = setTimeout(() => {
+                        // In a real application, this would save to a backend
+                        // For now, we'll just show the auto-save indicator
+                        showAutoSaveIndicator();
+                    }, 2000);
+                });
+            });
+        }
+
+        // Show auto-save indicator
+        function showAutoSaveIndicator() {
+            autoSaveIndicator.style.display = 'block';
+            setTimeout(() => {
+                autoSaveIndicator.style.display = 'none';
+            }, 3000);
+        }
+
+        // Helper function to get status color
+        function getStatusColor(status) {
+            switch (status) {
+                case 'Present': return 'green';
+                case 'In School': return 'orange';
+                case 'Absent': return 'red';
+                case 'Left': return 'blue';
+                default: return 'black';
+            }
+        }
+
+        // Initialize the application when the page loads
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
