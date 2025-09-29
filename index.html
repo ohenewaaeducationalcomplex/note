@@ -1,0 +1,1932 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>School Management System - Multi-Device Sync</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --success: #2ecc71;
+            --warning: #f39c12;
+            --danger: #e74c3c;
+            --light: #ecf0f1;
+            --dark: #34495e;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--dark));
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .sync-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+        }
+        
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: var(--success);
+            animation: pulse 2s infinite;
+        }
+        
+        .status-indicator.offline {
+            background-color: var(--danger);
+        }
+        
+        .status-indicator.syncing {
+            background-color: var(--warning);
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .login-container {
+            background-color: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            margin: 50px auto;
+        }
+        
+        .login-container h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: var(--primary);
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: border 0.3s;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--secondary);
+            outline: none;
+        }
+        
+        button {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, var(--success), #27ae60);
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, var(--warning), #e67e22);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, var(--danger), #c0392b);
+        }
+        
+        .dashboard {
+            display: none;
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .user-info {
+            font-weight: 600;
+            color: var(--primary);
+        }
+        
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+            flex-wrap: wrap;
+        }
+        
+        .tab {
+            padding: 12px 20px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+        
+        .tab:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .tab.active {
+            border-bottom: 3px solid var(--secondary);
+            font-weight: 600;
+            color: var(--secondary);
+        }
+        
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.5s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .status {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .status-pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        
+        .status-approved {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .status-rejected {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        .status-inactive {
+            background-color: #e2e3e5;
+            color: #383d41;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .action-btn {
+            padding: 6px 12px;
+            font-size: 14px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .form-container {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .card {
+            background-color: white;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        
+        .card h3 {
+            margin-bottom: 10px;
+            color: var(--primary);
+        }
+        
+        .guidelines {
+            line-height: 1.6;
+        }
+        
+        .guidelines ul {
+            margin-left: 20px;
+            margin-bottom: 15px;
+        }
+        
+        .time-display {
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+            margin: 10px 0;
+            color: var(--secondary);
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        
+        .attendance-form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .attendance-form input, .attendance-form select {
+            flex: 1;
+            min-width: 150px;
+        }
+        
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .message {
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            text-align: center;
+            display: none;
+        }
+        
+        .message.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .message.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .recent-activity {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+        }
+        
+        .activity-item {
+            padding: 10px;
+            border-left: 3px solid var(--secondary);
+            margin-bottom: 10px;
+            background-color: #f8f9fa;
+        }
+        
+        .device-sync-info {
+            background-color: #e8f4fd;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 14px;
+        }
+        
+        @media (max-width: 768px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+            
+            .attendance-form {
+                flex-direction: column;
+            }
+            
+            .tabs {
+                overflow-x: auto;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>School Management System</h1>
+            <div class="sync-status">
+                <div class="status-indicator" id="sync-status"></div>
+                <span id="sync-text">Initializing...</span>
+            </div>
+        </header>
+
+        <!-- Login Section -->
+        <div id="login-section" class="login-container">
+            <h2>Login to Your Account</h2>
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" placeholder="Enter your username">
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" placeholder="Enter your password">
+            </div>
+            <div class="form-group">
+                <label for="role">Role</label>
+                <select id="role">
+                    <option value="admin">Administrator</option>
+                    <option value="teacher">Teacher</option>
+                    <option value="student">Student</option>
+                </select>
+            </div>
+            <button id="login-btn">Login</button>
+            
+            <div id="login-message" class="message"></div>
+            
+            <div style="margin-top: 20px; text-align: center;">
+                <p><strong>Demo Credentials:</strong></p>
+                <p>Admin: admin / admin123</p>
+                <p>Teacher: teacher1 / pass123</p>
+                <p>Student: student1 / stud123</p>
+            </div>
+            
+            <div class="device-sync-info">
+                <strong>Multi-Device Sync:</strong> Changes made on this device will be reflected on other devices with the same system open.
+            </div>
+        </div>
+
+        <!-- Admin Dashboard -->
+        <div id="admin-dashboard" class="dashboard">
+            <div class="dashboard-header">
+                <h2>Administrator Dashboard</h2>
+                <div>
+                    <span class="user-info">Welcome, Admin</span>
+                    <button class="btn-danger" onclick="logout()">Logout</button>
+                </div>
+            </div>
+
+            <div class="tabs">
+                <div class="tab active" onclick="switchTab('admin', 'attendance')">Teacher Attendance</div>
+                <div class="tab" onclick="switchTab('admin', 'lesson-notes')">Lesson Notes</div>
+                <div class="tab" onclick="switchTab('admin', 'assignments')">Assignments</div>
+                <div class="tab" onclick="switchTab('admin', 'students')">Student Management</div>
+                <div class="tab" onclick="switchTab('admin', 'teachers')">Teacher Management</div>
+            </div>
+
+            <!-- Teacher Attendance Tab -->
+            <div id="admin-attendance" class="tab-content active">
+                <h3>Teacher Attendance Records</h3>
+                
+                <div class="form-container">
+                    <h4>Record Teacher Attendance</h4>
+                    <div class="time-display">Current Time: <span id="time-display"></span></div>
+                    <div class="attendance-form">
+                        <select id="teacher-select">
+                            <option value="">Select Teacher</option>
+                        </select>
+                        <select id="attendance-type">
+                            <option value="arrival">Record Arrival</option>
+                            <option value="departure">Record Departure</option>
+                        </select>
+                        <button onclick="recordAttendance()">Record Attendance</button>
+                    </div>
+                </div>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Teacher</th>
+                            <th>Arrival Time</th>
+                            <th>Departure Time</th>
+                            <th>Hours Worked</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="attendance-table">
+                        <!-- Attendance data will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Lesson Notes Tab -->
+            <div id="admin-lesson-notes" class="tab-content">
+                <h3>Lesson Notes Management</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Teacher</th>
+                            <th>Date</th>
+                            <th>Subject</th>
+                            <th>Lesson Note</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lesson-notes-table">
+                        <!-- Lesson notes data will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Assignments Tab -->
+            <div id="admin-assignments" class="tab-content">
+                <h3>Assignments Management</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Teacher</th>
+                            <th>Class</th>
+                            <th>Subject</th>
+                            <th>Assignment</th>
+                            <th>Due Date</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="assignments-table">
+                        <!-- Assignments data will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Student Management Tab -->
+            <div id="admin-students" class="tab-content">
+                <h3>Student Management</h3>
+                
+                <div class="form-container">
+                    <h4>Add New Student</h4>
+                    <div class="grid-2">
+                        <input type="text" id="student-name" placeholder="Student Name">
+                        <select id="student-class">
+                            <option value="">Select Class</option>
+                            <option value="Grade 1">Grade 1</option>
+                            <option value="Grade 2">Grade 2</option>
+                            <option value="Grade 3">Grade 3</option>
+                        </select>
+                    </div>
+                    <button onclick="addStudent()" style="margin-top: 15px;">Add Student</button>
+                </div>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Student ID</th>
+                            <th>Name</th>
+                            <th>Class</th>
+                            <th>Username</th>
+                            <th>Password</th>
+                            <th>Added By</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="students-table">
+                        <!-- Students data will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Teacher Management Tab -->
+            <div id="admin-teachers" class="tab-content">
+                <h3>Teacher Management</h3>
+                
+                <div class="form-container">
+                    <h4>Register New Teacher</h4>
+                    <div class="grid-2">
+                        <input type="text" id="teacher-name" placeholder="Teacher Full Name">
+                        <input type="email" id="teacher-email" placeholder="Teacher Email">
+                        <select id="teacher-class">
+                            <option value="">Assign to Class</option>
+                            <option value="Grade 1">Grade 1</option>
+                            <option value="Grade 2">Grade 2</option>
+                            <option value="Grade 3">Grade 3</option>
+                        </select>
+                        <input type="text" id="teacher-subject" placeholder="Primary Subject">
+                    </div>
+                    <button onclick="registerTeacher()" style="margin-top: 15px;">Register Teacher</button>
+                </div>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Teacher ID</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Class</th>
+                            <th>Subject</th>
+                            <th>Username</th>
+                            <th>Password</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="teachers-table">
+                        <!-- Teachers data will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Teacher Dashboard -->
+        <div id="teacher-dashboard" class="dashboard">
+            <div class="dashboard-header">
+                <h2>Teacher Dashboard</h2>
+                <div>
+                    <span class="user-info" id="teacher-welcome">Welcome, Teacher</span>
+                    <button class="btn-danger" onclick="logout()">Logout</button>
+                </div>
+            </div>
+
+            <div class="tabs">
+                <div class="tab active" onclick="switchTab('teacher', 'attendance')">My Attendance</div>
+                <div class="tab" onclick="switchTab('teacher', 'guidelines')">Guidelines</div>
+                <div class="tab" onclick="switchTab('teacher', 'submit-lesson')">Submit Lesson Note</div>
+                <div class="tab" onclick="switchTab('teacher', 'my-lessons')">My Lesson Notes</div>
+                <div class="tab" onclick="switchTab('teacher', 'submit-assignment')">Submit Assignment</div>
+                <div class="tab" onclick="switchTab('teacher', 'my-assignments')">My Assignments</div>
+            </div>
+
+            <!-- Teacher Attendance Tab -->
+            <div id="teacher-attendance" class="tab-content active">
+                <h3>My Attendance Records</h3>
+                <div class="time-display">Current Time: <span id="teacher-time-display"></span></div>
+                
+                <div class="form-container">
+                    <h4>Record My Attendance</h4>
+                    <div class="attendance-form">
+                        <select id="teacher-attendance-type">
+                            <option value="arrival">Record My Arrival</option>
+                            <option value="departure">Record My Departure</option>
+                        </select>
+                        <button onclick="recordMyAttendance()">Record Attendance</button>
+                    </div>
+                </div>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Arrival Time</th>
+                            <th>Departure Time</th>
+                            <th>Hours Worked</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="teacher-attendance-table">
+                        <!-- Teacher's attendance records will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Guidelines Tab -->
+            <div id="teacher-guidelines" class="tab-content">
+                <h3>Teacher Guidelines</h3>
+                <div class="guidelines">
+                    <div class="card">
+                        <h3>Lesson Note Writing Guidelines</h3>
+                        <ul>
+                            <li>Include clear learning objectives for each lesson</li>
+                            <li>Detail the teaching methodology to be used</li>
+                            <li>List required materials and resources</li>
+                            <li>Outline the lesson structure and timing</li>
+                            <li>Include assessment methods and evaluation criteria</li>
+                            <li>Specify homework or follow-up activities</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="card">
+                        <h3>Assignment Creation Guidelines</h3>
+                        <ul>
+                            <li>Clearly state the assignment objectives</li>
+                            <li>Provide detailed instructions for completion</li>
+                            <li>Specify the submission deadline</li>
+                            <li>Include grading criteria and rubrics</li>
+                            <li>Ensure assignments align with curriculum standards</li>
+                            <li>Consider diverse learning needs when designing tasks</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit Lesson Note Tab -->
+            <div id="teacher-submit-lesson" class="tab-content">
+                <h3>Submit New Lesson Note</h3>
+                <div class="form-container">
+                    <div class="form-group">
+                        <label for="lesson-subject">Subject</label>
+                        <input type="text" id="lesson-subject" placeholder="Enter subject">
+                    </div>
+                    <div class="form-group">
+                        <label for="lesson-note">Lesson Note</label>
+                        <textarea id="lesson-note" rows="6" placeholder="Enter your lesson note details"></textarea>
+                    </div>
+                    <button onclick="submitLessonNote()">Submit Lesson Note</button>
+                </div>
+            </div>
+
+            <!-- My Lesson Notes Tab -->
+            <div id="teacher-my-lessons" class="tab-content">
+                <h3>My Submitted Lesson Notes</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Subject</th>
+                            <th>Lesson Note</th>
+                            <th>Status</th>
+                            <th>Feedback</th>
+                        </tr>
+                    </thead>
+                    <tbody id="teacher-lessons-table">
+                        <!-- Teacher's lesson notes will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Submit Assignment Tab -->
+            <div id="teacher-submit-assignment" class="tab-content">
+                <h3>Create New Assignment</h3>
+                <div class="form-container">
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label for="assignment-class">Class</label>
+                            <select id="assignment-class">
+                                <option value="">Select Class</option>
+                                <option value="Grade 1">Grade 1</option>
+                                <option value="Grade 2">Grade 2</option>
+                                <option value="Grade 3">Grade 3</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="assignment-subject">Subject</label>
+                            <input type="text" id="assignment-subject" placeholder="Enter subject">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="assignment-details">Assignment Details</label>
+                        <textarea id="assignment-details" rows="4" placeholder="Enter assignment details"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="due-date">Due Date</label>
+                        <input type="date" id="due-date">
+                    </div>
+                    <button onclick="submitAssignment()">Submit Assignment</button>
+                </div>
+            </div>
+
+            <!-- My Assignments Tab -->
+            <div id="teacher-my-assignments" class="tab-content">
+                <h3>My Submitted Assignments</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Class</th>
+                            <th>Subject</th>
+                            <th>Assignment</th>
+                            <th>Due Date</th>
+                            <th>Status</th>
+                            <th>Feedback</th>
+                        </tr>
+                    </thead>
+                    <tbody id="teacher-assignments-table">
+                        <!-- Teacher's assignments will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Student Dashboard -->
+        <div id="student-dashboard" class="dashboard">
+            <div class="dashboard-header">
+                <h2>Student Dashboard</h2>
+                <div>
+                    <span class="user-info">Welcome, Student</span>
+                    <button class="btn-danger" onclick="logout()">Logout</button>
+                </div>
+            </div>
+
+            <div class="tabs">
+                <div class="tab active" onclick="switchTab('student', 'my-assignments')">My Assignments</div>
+            </div>
+
+            <!-- My Assignments Tab -->
+            <div id="student-my-assignments" class="tab-content active">
+                <h3>My Assignments</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Teacher</th>
+                            <th>Subject</th>
+                            <th>Assignment</th>
+                            <th>Due Date</th>
+                            <th>Status</th>
+                            <th>Feedback</th>
+                        </tr>
+                    </thead>
+                    <tbody id="student-assignments-table">
+                        <!-- Student's assignments will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Recent Activity Section -->
+        <div class="recent-activity">
+            <h3>Recent System Activity</h3>
+            <div id="activity-feed">
+                <!-- Activity items will be added here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Database and Sync Management
+        class SchoolDatabase {
+            constructor() {
+                this.db = null;
+                this.dbName = 'SchoolManagementSystem';
+                this.dbVersion = 1;
+                this.syncCallbacks = [];
+                this.init();
+            }
+            
+            async init() {
+                return new Promise((resolve, reject) => {
+                    const request = indexedDB.open(this.dbName, this.dbVersion);
+                    
+                    request.onerror = () => {
+                        console.error('IndexedDB error:', request.error);
+                        reject(request.error);
+                    };
+                    
+                    request.onsuccess = () => {
+                        this.db = request.result;
+                        console.log('IndexedDB initialized successfully');
+                        this.setSyncStatus(true);
+                        resolve();
+                    };
+                    
+                    request.onupgradeneeded = (event) => {
+                        const db = event.target.result;
+                        
+                        // Create object stores for all data types
+                        if (!db.objectStoreNames.contains('users')) {
+                            const usersStore = db.createObjectStore('users', { keyPath: 'username' });
+                            usersStore.createIndex('role', 'role', { unique: false });
+                        }
+                        
+                        if (!db.objectStoreNames.contains('attendance')) {
+                            const attendanceStore = db.createObjectStore('attendance', { keyPath: 'id', autoIncrement: true });
+                            attendanceStore.createIndex('teacher', 'teacher', { unique: false });
+                            attendanceStore.createIndex('date', 'date', { unique: false });
+                        }
+                        
+                        if (!db.objectStoreNames.contains('lessonNotes')) {
+                            const lessonNotesStore = db.createObjectStore('lessonNotes', { keyPath: 'id', autoIncrement: true });
+                            lessonNotesStore.createIndex('teacher', 'teacher', { unique: false });
+                        }
+                        
+                        if (!db.objectStoreNames.contains('assignments')) {
+                            const assignmentsStore = db.createObjectStore('assignments', { keyPath: 'id', autoIncrement: true });
+                            assignmentsStore.createIndex('teacher', 'teacher', { unique: false });
+                            assignmentsStore.createIndex('class', 'class', { unique: false });
+                        }
+                        
+                        if (!db.objectStoreNames.contains('students')) {
+                            const studentsStore = db.createObjectStore('students', { keyPath: 'id' });
+                            studentsStore.createIndex('class', 'class', { unique: false });
+                        }
+                        
+                        if (!db.objectStoreNames.contains('activity')) {
+                            db.createObjectStore('activity', { keyPath: 'timestamp' });
+                        }
+                    };
+                });
+            }
+            
+            // Generic method to add data
+            async addData(storeName, data) {
+                return new Promise((resolve, reject) => {
+                    const transaction = this.db.transaction([storeName], 'readwrite');
+                    const store = transaction.objectStore(storeName);
+                    const request = store.add(data);
+                    
+                    request.onsuccess = () => {
+                        resolve(request.result);
+                        this.triggerSync(storeName);
+                    };
+                    
+                    request.onerror = () => reject(request.error);
+                });
+            }
+            
+            // Generic method to get all data
+            async getAllData(storeName) {
+                return new Promise((resolve, reject) => {
+                    const transaction = this.db.transaction([storeName], 'readonly');
+                    const store = transaction.objectStore(storeName);
+                    const request = store.getAll();
+                    
+                    request.onsuccess = () => resolve(request.result);
+                    request.onerror = () => reject(request.error);
+                });
+            }
+            
+            // Generic method to update data
+            async updateData(storeName, key, updates) {
+                return new Promise(async (resolve, reject) => {
+                    const transaction = this.db.transaction([storeName], 'readwrite');
+                    const store = transaction.objectStore(storeName);
+                    
+                    // First get the existing record
+                    const getRequest = store.get(key);
+                    
+                    getRequest.onsuccess = () => {
+                        const data = getRequest.result;
+                        if (data) {
+                            // Update the record
+                            const updatedData = { ...data, ...updates };
+                            const putRequest = store.put(updatedData);
+                            
+                            putRequest.onsuccess = () => {
+                                resolve(updatedData);
+                                this.triggerSync(storeName);
+                            };
+                            
+                            putRequest.onerror = () => reject(putRequest.error);
+                        } else {
+                            reject(new Error('Record not found'));
+                        }
+                    };
+                    
+                    getRequest.onerror = () => reject(getRequest.error);
+                });
+            }
+            
+            // Generic method to delete data
+            async deleteData(storeName, key) {
+                return new Promise((resolve, reject) => {
+                    const transaction = this.db.transaction([storeName], 'readwrite');
+                    const store = transaction.objectStore(storeName);
+                    const request = store.delete(key);
+                    
+                    request.onsuccess = () => {
+                        resolve();
+                        this.triggerSync(storeName);
+                    };
+                    
+                    request.onerror = () => reject(request.error);
+                });
+            }
+            
+            // Add activity log
+            async addActivity(message) {
+                const activity = {
+                    timestamp: new Date().toISOString(),
+                    message: message,
+                    user: currentUser ? currentUser.name : 'System'
+                };
+                
+                await this.addData('activity', activity);
+                
+                // Also update the UI
+                this.updateActivityFeed();
+            }
+            
+            // Update activity feed in UI
+            async updateActivityFeed() {
+                const activities = await this.getAllData('activity');
+                const activityFeed = document.getElementById('activity-feed');
+                
+                // Sort by timestamp (newest first)
+                activities.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                
+                activityFeed.innerHTML = '';
+                
+                // Show only the 10 most recent activities
+                activities.slice(0, 10).forEach(activity => {
+                    const activityItem = document.createElement('div');
+                    activityItem.className = 'activity-item';
+                    activityItem.innerHTML = `
+                        <strong>${new Date(activity.timestamp).toLocaleTimeString()}</strong> - 
+                        ${activity.message} (by ${activity.user})
+                    `;
+                    activityFeed.appendChild(activityItem);
+                });
+            }
+            
+            // Set sync status
+            setSyncStatus(connected) {
+                const statusIndicator = document.getElementById('sync-status');
+                const statusText = document.getElementById('sync-text');
+                
+                if (connected) {
+                    statusIndicator.className = 'status-indicator';
+                    statusText.textContent = 'Database Connected';
+                } else {
+                    statusIndicator.className = 'status-indicator offline';
+                    statusText.textContent = 'Database Offline';
+                }
+            }
+            
+            // Trigger sync (simulate multi-device sync)
+            triggerSync(storeName) {
+                // In a real application, this would sync with a server
+                // For this demo, we'll simulate sync across browser tabs
+                
+                // Update UI if dashboard is active
+                if (currentUser) {
+                    if (currentUser.role === 'admin') {
+                        updateAdminDashboard();
+                    } else if (currentUser.role === 'teacher') {
+                        updateTeacherDashboard();
+                    } else if (currentUser.role === 'student') {
+                        updateStudentDashboard();
+                    }
+                }
+                
+                // Broadcast to other tabs (if any)
+                if (typeof BroadcastChannel !== 'undefined') {
+                    const channel = new BroadcastChannel('school_system_sync');
+                    channel.postMessage({
+                        type: 'data_updated',
+                        store: storeName,
+                        timestamp: new Date().toISOString()
+                    });
+                }
+            }
+            
+            // Initialize with demo data if empty
+            async initializeDemoData() {
+                const users = await this.getAllData('users');
+                
+                if (users.length === 0) {
+                    console.log('Initializing with demo data...');
+                    
+                    // Add demo users
+                    const demoUsers = [
+                        { username: 'admin', password: 'admin123', role: 'admin', name: 'Administrator', status: 'active' },
+                        { username: 'teacher1', password: 'pass123', role: 'teacher', name: 'John Smith', class: 'Grade 1', email: 'john.smith@school.edu', subject: 'Mathematics', status: 'active' },
+                        { username: 'teacher2', password: 'pass123', role: 'teacher', name: 'Sarah Johnson', class: 'Grade 2', email: 'sarah.johnson@school.edu', subject: 'Science', status: 'active' },
+                        { username: 'student1', password: 'stud123', role: 'student', name: 'Michael Brown', class: 'Grade 1', status: 'active' },
+                        { username: 'student2', password: 'stud123', role: 'student', name: 'Emily Davis', class: 'Grade 2', status: 'active' }
+                    ];
+                    
+                    for (const user of demoUsers) {
+                        await this.addData('users', user);
+                    }
+                    
+                    // Add demo attendance
+                    const demoAttendance = [
+                        { date: '2023-10-01', teacher: 'John Smith', arrival: '08:00', departure: '15:30', hours: 7.5, status: 'complete' },
+                        { date: '2023-10-01', teacher: 'Sarah Johnson', arrival: '08:15', departure: '15:45', hours: 7.5, status: 'complete' },
+                        { date: '2023-10-02', teacher: 'John Smith', arrival: '07:55', departure: '15:25', hours: 7.5, status: 'complete' }
+                    ];
+                    
+                    for (const attendance of demoAttendance) {
+                        await this.addData('attendance', attendance);
+                    }
+                    
+                    // Add demo lesson notes
+                    const demoLessonNotes = [
+                        { teacher: 'John Smith', date: '2023-10-01', subject: 'Mathematics', note: 'Introduction to basic arithmetic operations', status: 'approved', feedback: 'Well structured lesson plan' },
+                        { teacher: 'Sarah Johnson', date: '2023-10-02', subject: 'Science', note: 'Exploring the solar system and planets', status: 'pending', feedback: '' },
+                        { teacher: 'John Smith', date: '2023-10-03', subject: 'English', note: 'Grammar: Parts of speech and sentence structure', status: 'rejected', feedback: 'Please include more interactive activities' }
+                    ];
+                    
+                    for (const note of demoLessonNotes) {
+                        await this.addData('lessonNotes', note);
+                    }
+                    
+                    // Add demo assignments
+                    const demoAssignments = [
+                        { teacher: 'John Smith', class: 'Grade 1', subject: 'Mathematics', assignment: 'Complete exercises 1-5 on page 23', dueDate: '2023-10-10', status: 'approved', feedback: 'Good assignment covering key concepts' },
+                        { teacher: 'Sarah Johnson', class: 'Grade 2', subject: 'Science', assignment: 'Research and write about your favorite planet', dueDate: '2023-10-15', status: 'pending', feedback: '' },
+                        { teacher: 'John Smith', class: 'Grade 1', subject: 'English', assignment: 'Write a short story using at least 5 adjectives', dueDate: '2023-10-12', status: 'approved', feedback: 'Creative writing assignment well designed' }
+                    ];
+                    
+                    for (const assignment of demoAssignments) {
+                        await this.addData('assignments', assignment);
+                    }
+                    
+                    // Add demo students
+                    const demoStudents = [
+                        { id: 'STU001', name: 'Michael Brown', class: 'Grade 1', username: 'student1', password: 'stud123', addedBy: 'admin', status: 'active' },
+                        { id: 'STU002', name: 'Emily Davis', class: 'Grade 2', username: 'student2', password: 'stud123', addedBy: 'admin', status: 'active' },
+                        { id: 'STU003', name: 'James Wilson', class: 'Grade 1', username: 'student3', password: 'stud123', addedBy: 'John Smith', status: 'active' }
+                    ];
+                    
+                    for (const student of demoStudents) {
+                        await this.addData('students', student);
+                    }
+                    
+                    await this.addActivity('System initialized with demo data');
+                }
+            }
+        }
+
+        // Initialize database
+        const schoolDB = new SchoolDatabase();
+
+        // Current user information
+        let currentUser = null;
+        let timeInterval;
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Wait for database to initialize
+            await schoolDB.init();
+            await schoolDB.initializeDemoData();
+            
+            // Check if there's a logged-in user in sessionStorage
+            const savedUser = sessionStorage.getItem('currentUser');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                showDashboard();
+            }
+            
+            // Start the clock
+            updateClock();
+            timeInterval = setInterval(updateClock, 1000);
+            
+            // Populate teacher select dropdown
+            populateTeacherSelect();
+            
+            // Set up login button event listener
+            document.getElementById('login-btn').addEventListener('click', login);
+            
+            // Allow Enter key to trigger login
+            document.getElementById('password').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    login();
+                }
+            });
+            
+            // Set up BroadcastChannel for cross-tab communication
+            if (typeof BroadcastChannel !== 'undefined') {
+                const channel = new BroadcastChannel('school_system_sync');
+                channel.onmessage = (event) => {
+                    if (event.data.type === 'data_updated') {
+                        // Refresh the dashboard when data is updated in another tab
+                        if (currentUser) {
+                            if (currentUser.role === 'admin') {
+                                updateAdminDashboard();
+                            } else if (currentUser.role === 'teacher') {
+                                updateTeacherDashboard();
+                            } else if (currentUser.role === 'student') {
+                                updateStudentDashboard();
+                            }
+                        }
+                        
+                        // Update activity feed
+                        schoolDB.updateActivityFeed();
+                    }
+                };
+            }
+            
+            // Update activity feed
+            await schoolDB.updateActivityFeed();
+        });
+
+        // Update the clock display
+        function updateClock() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString();
+            document.getElementById('time-display').textContent = timeString;
+            document.getElementById('teacher-time-display').textContent = timeString;
+        }
+
+        // Login function
+        async function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const role = document.getElementById('role').value;
+            
+            const messageEl = document.getElementById('login-message');
+            
+            // Validate inputs
+            if (!username || !password) {
+                showMessage(messageEl, 'Please enter both username and password', 'error');
+                return;
+            }
+            
+            // Get users from database
+            const users = await schoolDB.getAllData('users');
+            
+            // Find user
+            const user = users.find(u => 
+                u.username === username && u.password === password && u.role === role && u.status === 'active'
+            );
+            
+            if (user) {
+                currentUser = user;
+                // Save user to sessionStorage
+                sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
+                showDashboard();
+                schoolDB.addActivity(`${user.name} logged in as ${user.role}`);
+            } else {
+                showMessage(messageEl, 'Invalid username, password, or role selection', 'error');
+            }
+        }
+
+        // Show appropriate dashboard based on user role
+        function showDashboard() {
+            // Hide login section
+            document.getElementById('login-section').style.display = 'none';
+            
+            // Hide all dashboards first
+            document.getElementById('admin-dashboard').style.display = 'none';
+            document.getElementById('teacher-dashboard').style.display = 'none';
+            document.getElementById('student-dashboard').style.display = 'none';
+            
+            // Show appropriate dashboard
+            if (currentUser.role === 'admin') {
+                document.getElementById('admin-dashboard').style.display = 'block';
+                updateAdminDashboard();
+            } else if (currentUser.role === 'teacher') {
+                document.getElementById('teacher-dashboard').style.display = 'block';
+                document.getElementById('teacher-welcome').textContent = `Welcome, ${currentUser.name}`;
+                updateTeacherDashboard();
+            } else if (currentUser.role === 'student') {
+                document.getElementById('student-dashboard').style.display = 'block';
+                updateStudentDashboard();
+            }
+        }
+
+        // Logout function
+        function logout() {
+            schoolDB.addActivity(`${currentUser.name} logged out`);
+            currentUser = null;
+            sessionStorage.removeItem('currentUser');
+            
+            // Hide all dashboards
+            document.getElementById('admin-dashboard').style.display = 'none';
+            document.getElementById('teacher-dashboard').style.display = 'none';
+            document.getElementById('student-dashboard').style.display = 'none';
+            
+            // Show login section
+            document.getElementById('login-section').style.display = 'block';
+            
+            // Clear login form
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+            document.getElementById('role').value = 'admin';
+        }
+
+        // Switch between tabs
+        function switchTab(userType, tabName) {
+            // Hide all tab contents for this user type
+            const tabContents = document.querySelectorAll(`#${userType}-dashboard .tab-content`);
+            tabContents.forEach(tab => tab.classList.remove('active'));
+            
+            // Remove active class from all tabs
+            const tabs = document.querySelectorAll(`#${userType}-dashboard .tab`);
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            // Activate selected tab
+            document.getElementById(`${userType}-${tabName}`).classList.add('active');
+            
+            // Find and activate the clicked tab
+            for (let tab of tabs) {
+                if (tab.textContent.trim().toLowerCase().replace(/\s+/g, '-') === tabName) {
+                    tab.classList.add('active');
+                    break;
+                }
+            }
+        }
+
+        // Update admin dashboard with current data
+        async function updateAdminDashboard() {
+            // Get data from database
+            const attendance = await schoolDB.getAllData('attendance');
+            const lessonNotes = await schoolDB.getAllData('lessonNotes');
+            const assignments = await schoolDB.getAllData('assignments');
+            const students = await schoolDB.getAllData('students');
+            const users = await schoolDB.getAllData('users');
+            const teachers = users.filter(user => user.role === 'teacher');
+            
+            // Update attendance table
+            const attendanceTable = document.getElementById('attendance-table');
+            attendanceTable.innerHTML = '';
+            
+            // Sort attendance by date (newest first)
+            const sortedAttendance = [...attendance].sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            sortedAttendance.forEach(record => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${record.date}</td>
+                    <td>${record.teacher}</td>
+                    <td>${record.arrival || '-'}</td>
+                    <td>${record.departure || '-'}</td>
+                    <td>${record.hours > 0 ? record.hours + ' hours' : '-'}</td>
+                    <td><span class="status status-${record.status === 'complete' ? 'approved' : 'pending'}">${record.status}</span></td>
+                `;
+                attendanceTable.appendChild(row);
+            });
+            
+            // Update lesson notes table
+            const lessonNotesTable = document.getElementById('lesson-notes-table');
+            lessonNotesTable.innerHTML = '';
+            
+            lessonNotes.forEach(note => {
+                const statusClass = `status-${note.status}`;
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${note.teacher}</td>
+                    <td>${note.date}</td>
+                    <td>${note.subject}</td>
+                    <td>${note.note}</td>
+                    <td><span class="status ${statusClass}">${note.status}</span></td>
+                    <td>
+                        <div class="action-buttons">
+                            ${note.status === 'pending' ? 
+                                `<button class="action-btn btn-success" onclick="approveLessonNote(${note.id})">Approve</button>
+                                 <button class="action-btn btn-danger" onclick="rejectLessonNote(${note.id})">Reject</button>` : 
+                                '<span>Action taken</span>'
+                            }
+                        </div>
+                    </td>
+                `;
+                lessonNotesTable.appendChild(row);
+            });
+            
+            // Update assignments table
+            const assignmentsTable = document.getElementById('assignments-table');
+            assignmentsTable.innerHTML = '';
+            
+            assignments.forEach(assignment => {
+                const statusClass = `status-${assignment.status}`;
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${assignment.teacher}</td>
+                    <td>${assignment.class}</td>
+                    <td>${assignment.subject}</td>
+                    <td>${assignment.assignment}</td>
+                    <td>${assignment.dueDate}</td>
+                    <td><span class="status ${statusClass}">${assignment.status}</span></td>
+                    <td>
+                        <div class="action-buttons">
+                            ${assignment.status === 'pending' ? 
+                                `<button class="action-btn btn-success" onclick="approveAssignment(${assignment.id})">Approve</button>
+                                 <button class="action-btn btn-danger" onclick="rejectAssignment(${assignment.id})">Reject</button>` : 
+                                '<span>Action taken</span>'
+                            }
+                        </div>
+                    </td>
+                `;
+                assignmentsTable.appendChild(row);
+            });
+            
+            // Update students table
+            const studentsTable = document.getElementById('students-table');
+            studentsTable.innerHTML = '';
+            
+            students.forEach(student => {
+                const statusClass = `status-${student.status}`;
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${student.id}</td>
+                    <td>${student.name}</td>
+                    <td>${student.class}</td>
+                    <td>${student.username}</td>
+                    <td>${student.password}</td>
+                    <td>${student.addedBy}</td>
+                    <td><span class="status ${statusClass}">${student.status}</span></td>
+                `;
+                studentsTable.appendChild(row);
+            });
+            
+            // Update teachers table
+            const teachersTable = document.getElementById('teachers-table');
+            teachersTable.innerHTML = '';
+            
+            teachers.forEach(teacher => {
+                const statusClass = `status-${teacher.status}`;
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>TCH${teachers.indexOf(teacher) + 1}</td>
+                    <td>${teacher.name}</td>
+                    <td>${teacher.email || '-'}</td>
+                    <td>${teacher.class || '-'}</td>
+                    <td>${teacher.subject || '-'}</td>
+                    <td>${teacher.username}</td>
+                    <td>${teacher.password}</td>
+                    <td><span class="status ${statusClass}">${teacher.status}</span></td>
+                    <td>
+                        <div class="action-buttons">
+                            ${teacher.status === 'active' ? 
+                                `<button class="action-btn btn-warning" onclick="toggleTeacherStatus('${teacher.username}', 'inactive')">Deactivate</button>` : 
+                                `<button class="action-btn btn-success" onclick="toggleTeacherStatus('${teacher.username}', 'active')">Activate</button>`
+                            }
+                            <button class="action-btn btn-danger" onclick="deleteTeacher('${teacher.username}')">Delete</button>
+                        </div>
+                    </td>
+                `;
+                teachersTable.appendChild(row);
+            });
+        }
+
+        // Update teacher dashboard with current data
+        async function updateTeacherDashboard() {
+            // Get data from database
+            const attendance = await schoolDB.getAllData('attendance');
+            const lessonNotes = await schoolDB.getAllData('lessonNotes');
+            const assignments = await schoolDB.getAllData('assignments');
+            
+            // Update teacher's attendance
+            const teacherAttendanceTable = document.getElementById('teacher-attendance-table');
+            teacherAttendanceTable.innerHTML = '';
+            
+            const teacherAttendance = attendance.filter(record => record.teacher === currentUser.name)
+                .sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            teacherAttendance.forEach(record => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${record.date}</td>
+                    <td>${record.arrival || '-'}</td>
+                    <td>${record.departure || '-'}</td>
+                    <td>${record.hours > 0 ? record.hours + ' hours' : '-'}</td>
+                    <td><span class="status status-${record.status === 'complete' ? 'approved' : 'pending'}">${record.status}</span></td>
+                `;
+                teacherAttendanceTable.appendChild(row);
+            });
+            
+            // Update teacher's lesson notes
+            const teacherLessonsTable = document.getElementById('teacher-lessons-table');
+            teacherLessonsTable.innerHTML = '';
+            
+            const teacherNotes = lessonNotes.filter(note => note.teacher === currentUser.name);
+            teacherNotes.forEach(note => {
+                const statusClass = `status-${note.status}`;
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${note.date}</td>
+                    <td>${note.subject}</td>
+                    <td>${note.note}</td>
+                    <td><span class="status ${statusClass}">${note.status}</span></td>
+                    <td>${note.feedback || '-'}</td>
+                `;
+                teacherLessonsTable.appendChild(row);
+            });
+            
+            // Update teacher's assignments
+            const teacherAssignmentsTable = document.getElementById('teacher-assignments-table');
+            teacherAssignmentsTable.innerHTML = '';
+            
+            const teacherAssignments = assignments.filter(assignment => assignment.teacher === currentUser.name);
+            teacherAssignments.forEach(assignment => {
+                const statusClass = `status-${assignment.status}`;
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${assignment.dueDate}</td>
+                    <td>${assignment.class}</td>
+                    <td>${assignment.subject}</td>
+                    <td>${assignment.assignment}</td>
+                    <td>${assignment.dueDate}</td>
+                    <td><span class="status ${statusClass}">${assignment.status}</span></td>
+                    <td>${assignment.feedback || '-'}</td>
+                `;
+                teacherAssignmentsTable.appendChild(row);
+            });
+        }
+
+        // Update student dashboard with current data
+        async function updateStudentDashboard() {
+            // Get data from database
+            const assignments = await schoolDB.getAllData('assignments');
+            
+            // Update student's assignments
+            const studentAssignmentsTable = document.getElementById('student-assignments-table');
+            studentAssignmentsTable.innerHTML = '';
+            
+            const studentClass = currentUser.class;
+            const studentAssignments = assignments.filter(assignment => 
+                assignment.class === studentClass && assignment.status === 'approved'
+            );
+            
+            if (studentAssignments.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = `<td colspan="6" style="text-align: center;">No assignments available</td>`;
+                studentAssignmentsTable.appendChild(row);
+            } else {
+                studentAssignments.forEach(assignment => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${assignment.teacher}</td>
+                        <td>${assignment.subject}</td>
+                        <td>${assignment.assignment}</td>
+                        <td>${assignment.dueDate}</td>
+                        <td><span class="status status-approved">Active</span></td>
+                        <td>${assignment.feedback || '-'}</td>
+                    `;
+                    studentAssignmentsTable.appendChild(row);
+                });
+            }
+        }
+
+        // Populate teacher select dropdown
+        async function populateTeacherSelect() {
+            const teacherSelect = document.getElementById('teacher-select');
+            teacherSelect.innerHTML = '<option value="">Select Teacher</option>';
+            
+            const users = await schoolDB.getAllData('users');
+            const teachers = users.filter(user => user.role === 'teacher' && user.status === 'active');
+            teachers.forEach(teacher => {
+                const option = document.createElement('option');
+                option.value = teacher.name;
+                option.textContent = teacher.name;
+                teacherSelect.appendChild(option);
+            });
+        }
+
+        // Record teacher attendance (admin function)
+        async function recordAttendance() {
+            const teacher = document.getElementById('teacher-select').value;
+            const attendanceType = document.getElementById('attendance-type').value;
+            
+            if (!teacher) {
+                alert('Please select a teacher');
+                return;
+            }
+            
+            const now = new Date();
+            const currentTime = now.toTimeString().split(' ')[0].substring(0, 5); // HH:MM format
+            const today = now.toISOString().split('T')[0];
+            
+            // Get current attendance data
+            let attendance = await schoolDB.getAllData('attendance');
+            
+            // Check if there's already an attendance record for today
+            let attendanceRecord = attendance.find(record => 
+                record.teacher === teacher && record.date === today
+            );
+            
+            if (attendanceRecord) {
+                // Update existing record
+                if (attendanceType === 'arrival') {
+                    await schoolDB.updateData('attendance', attendanceRecord.id, {
+                        arrival: currentTime,
+                        status: attendanceRecord.departure ? 'complete' : 'present'
+                    });
+                } else {
+                    // Calculate hours worked
+                    let hours = 0;
+                    if (attendanceRecord.arrival) {
+                        const arrivalTime = new Date(`2000-01-01T${attendanceRecord.arrival}`);
+                        const departureTime = new Date(`2000-01-01T${currentTime}`);
+                        hours = (departureTime - arrivalTime) / (1000 * 60 * 60);
+                        hours = Math.round(hours * 10) / 10;
+                    }
+                    
+                    await schoolDB.updateData('attendance', attendanceRecord.id, {
+                        departure: currentTime,
+                        hours: hours,
+                        status: 'complete'
+                    });
+                }
+            } else {
+                // Create new record
+                await schoolDB.addData('attendance', {
+                    date: today,
+                    teacher: teacher,
+                    arrival: attendanceType === 'arrival' ? currentTime : '',
+                    departure: attendanceType === 'departure' ? currentTime : '',
+                    hours: 0,
+                    status: attendanceType === 'arrival' ? 'present' : 'incomplete'
+                });
+            }
+            
+            // Update dashboard
+            updateAdminDashboard();
+            
+            schoolDB.addActivity(`Attendance recorded for ${teacher} at ${currentTime}`);
+            alert(`Attendance recorded successfully for ${teacher} at ${currentTime}`);
+        }
+
+        // Record teacher's own attendance (teacher function)
+        async function recordMyAttendance() {
+            const attendanceType = document.getElementById('teacher-attendance-type').value;
+            const teacher = currentUser.name;
+            
+            const now = new Date();
+            const currentTime = now.toTimeString().split(' ')[0].substring(0, 5); // HH:MM format
+            const today = now.toISOString().split('T')[0];
+            
+            // Get current attendance data
+            let attendance = await schoolDB.getAllData('attendance');
+            
+            // Check if there's already an attendance record for today
+            let attendanceRecord = attendance.find(record => 
+                record.teacher === teacher && record.date === today
+            );
+            
+            if (attendanceRecord) {
+                // Update existing record
+                if (attendanceType === 'arrival') {
+                    if (attendanceRecord.arrival) {
+                        alert('You have already recorded your arrival for today');
+                        return;
+                    }
+                    await schoolDB.updateData('attendance', attendanceRecord.id, {
+                        arrival: currentTime,
+                        status: attendanceRecord.departure ? 'complete' : 'present'
+                    });
+                } else {
+                    if (attendanceRecord.departure) {
+                        alert('You have already recorded your departure for today');
+                        return;
+                    }
+                    
+                    // Calculate hours worked
+                    let hours = 0;
+                    if (attendanceRecord.arrival) {
+                        const arrivalTime = new Date(`2000-01-01T${attendanceRecord.arrival}`);
+                        const departureTime = new Date(`2000-01-01T${currentTime}`);
+                        hours = (departureTime - arrivalTime) / (1000 * 60 * 60);
+                        hours = Math.round(hours * 10) / 10;
+                    }
+                    
+                    await schoolDB.updateData('attendance', attendanceRecord.id, {
+                        departure: currentTime,
+                        hours: hours,
+                        status: 'complete'
+                    });
+                }
+            } else {
+                // Create new record
+                await schoolDB.addData('attendance', {
+                    date: today,
+                    teacher: teacher,
+                    arrival: attendanceType === 'arrival' ? currentTime : '',
+                    departure: attendanceType === 'departure' ? currentTime : '',
+                    hours: 0,
+                    status: attendanceType === 'arrival' ? 'present' : 'incomplete'
+                });
+            }
+            
+            // Update dashboard
+            updateTeacherDashboard();
+            
+            schoolDB.addActivity(`${teacher} recorded ${attendanceType} at ${currentTime}`);
+            alert(`Your ${attendanceType} has been recorded at ${currentTime}`);
+        }
+
+        // Approve lesson note
+        async function approveLessonNote(id) {
+            await schoolDB.updateData('lessonNotes', id, {
+                status: 'approved',
+                feedback: 'Approved by admin on ' + new Date().toLocaleDateString()
+            });
+            
+            updateAdminDashboard();
+            
+            const lessonNotes = await schoolDB.getAllData('lessonNotes');
+            const note = lessonNotes.find(n => n.id === id);
+            if (note) {
+                schoolDB.addActivity(`Lesson note approved for ${note.teacher}`);
+            }
+        }
+
+        // Reject lesson note
+        async function rejectLessonNote(id) {
+            await schoolDB.updateData('lessonNotes', id, {
+                status: 'rejected',
+                feedback: 'Please revise and resubmit. Feedback provided on ' + new Date().toLocaleDateString()
+            });
+            
+            updateAdminDashboard();
+            
+            const lessonNotes = await schoolDB.getAllData('lessonNotes');
+            const note = lessonNotes.find(n => n.id === id);
+            if (note) {
+                schoolDB.addActivity(`Lesson note rejected for ${note.teacher}`);
+            }
+        }
+
+        // Approve assignment
+        async function approveAssignment(id) {
+            await schoolDB.updateData('assignments', id, {
+                status: 'approved',
+                feedback: 'Approved by admin on ' + new Date().toLocaleDateString()
+            });
+            
+            updateAdminDashboard();
+            
+            const assignments = await schoolDB.getAllData('assignments');
+            const assignment = assignments.find(a => a.id === id);
+            if (assignment) {
+                schoolDB.addActivity(`Assignment approved for ${assignment.teacher}`);
+            }
+        }
+
+        // Reject assignment
+        async function rejectAssignment(id) {
+            await schoolDB.updateData('assignments', id, {
+                status: 'rejected',
+                feedback: 'Please revise and resubmit. Feedback provided on ' + new Date().toLocaleDateString()
+            });
+            
+            updateAdminDashboard();
+            
+            const assignments = await schoolDB.getAllData('assignments');
+            const assignment = assignments.find(a => a.id === id);
+            if (assignment) {
+                schoolDB.addActivity(`Assignment rejected for ${assignment.teacher}`);
+            }
+        }
+
+        // Add new student
+        async function addStudent() {
+            const name = document.getElementById('student-name').value;
+            const studentClass = document.getElementById('student-class').value;
+            
+            if (!name || !studentClass) {
+                alert('Please enter student name and select a class');
+                return;
+            }
+            
+            // Get current data
+            let students = await schoolDB.getAllData('students');
+            let users = await schoolDB.getAllData('users');
+            
+            // Generate student ID and credentials
+            const newId = 'STU' + (students.length + 1).toString().padStart(3, '0');
+            const username = name.toLowerCase().replace(/\s+/g, '') + (students.length + 1);
+            const password = 'stud' + (students.length + 1);
+            
+            // Add to students data
+            await schoolDB.addData('students', {
+                id: newId,
+                name: name,
+                class: studentClass,
+                username: username,
+                password: password,
+                addedBy: currentUser.name,
+                status: 'active'
+            });
+            
+            // Also add to users for login
+            await schoolDB.addData('users', {
+                username: username,
+                password: password,
+                role: 'student',
+                name: name,
+                class: studentClass,
+                status: 'active'
+            });
+            
+            // Update dashboard
+            updateAdminDashboard();
+            
+            // Clear form
+            document.getElementById('student-name').value = '';
+            document.getElementById('student-class').value = '';
+            
+            schoolDB.addActivity(`New student added: ${name}`);
+            alert(`Student added successfully!\nUsername: ${username}\nPassword: ${password}`);
+        }
+
+        // Register new teacher
+        async function registerTeacher() {
+            const name = document.getElementById('teacher-name').value;
+            const email = document.getElementById('teacher-email').value;
+            const teacherClass = document.getElementById('teacher-class').value;
+            const subject = document.getElementById('teacher-subject').value;
+            
+            if (!name) {
+                alert('Please enter teacher name');
+                return;
+            }
+            
+            // Get current users data
+            let users = await schoolDB.getAllData('users');
+            
+            // Generate username and password
+            const username = name.toLowerCase().replace(/\s+/g, '') + (users.filter(u => u.role === 'teacher').length + 1);
+            const password = 'pass' + (users.filter(u => u.role === 'teacher').length + 1);
+            
+            // Add to users data
+            await schoolDB.addData('users', {
+                username: username,
+                password: password,
+                role: 'teacher',
+                name: name,
+                email: email,
+                class: teacherClass,
+                subject: subject,
+                status: 'active'
+            });
+            
+            // Update dashboard
+            updateAdminDashboard();
+            
+            // Clear form
+            document.getElementById('teacher-name').value = '';
+            document.getElementById('teacher-email').value = '';
+            document.getElementById('teacher-class').value = '';
+            document.getElementById('teacher-subject').value = '';
+            
+            // Update teacher select dropdown
+            populateTeacherSelect();
+            
+            schoolDB.addActivity(`New teacher registered: ${name}`);
+            alert(`Teacher registered successfully!\nUsername: ${username}\nPassword: ${password}`);
+        }
+
+        // Toggle teacher status (active/inactive)
+        async function toggleTeacherStatus(username, status) {
+            await schoolDB.updateData('users', username, { status: status });
+            updateAdminDashboard();
+            populateTeacherSelect();
+            
+            const users = await schoolDB.getAllData('users');
+            const teacher = users.find(u => u.username === username);
+            if (teacher) {
+                schoolDB.addActivity(`Teacher ${teacher.name} status changed to ${status}`);
+            }
+            alert(`Teacher status updated to ${status}`);
+        }
+
+        // Delete teacher
+        async function deleteTeacher(username) {
+            if (confirm('Are you sure you want to delete this teacher? This action cannot be undone.')) {
+                const users = await schoolDB.getAllData('users');
+                const teacher = users.find(u => u.username === username);
+                
+                if (teacher) {
+                    await schoolDB.deleteData('users', username);
+                    updateAdminDashboard();
+                    populateTeacherSelect();
+                    schoolDB.addActivity(`Teacher deleted: ${teacher.name}`);
+                    alert('Teacher deleted successfully');
+                }
+            }
+        }
+
+        // Submit lesson note (teacher)
+        async function submitLessonNote() {
+            const subject = document.getElementById('lesson-subject').value;
+            const note = document.getElementById('lesson-note').value;
+            
+            if (!subject || !note) {
+                alert('Please enter both subject and lesson note');
+                return;
+            }
+            
+            // Add to lesson notes data
+            await schoolDB.addData('lessonNotes', {
+                teacher: currentUser.name,
+                date: new Date().toISOString().split('T')[0],
+                subject: subject,
+                note: note,
+                status: 'pending',
+                feedback: ''
+            });
+            
+            // Update dashboard
+            updateTeacherDashboard();
+            
+            // Clear form
+            document.getElementById('lesson-subject').value = '';
+            document.getElementById('lesson-note').value = '';
+            
+            schoolDB.addActivity(`Lesson note submitted by ${currentUser.name}`);
+            alert('Lesson note submitted successfully!');
+        }
+
+        // Submit assignment (teacher)
+        async function submitAssignment() {
+            const assignmentClass = document.getElementById('assignment-class').value;
+            const subject = document.getElementById('assignment-subject').value;
+            const details = document.getElementById('assignment-details').value;
+            const dueDate = document.getElementById('due-date').value;
+            
+            if (!assignmentClass || !subject || !details || !dueDate) {
+                alert('Please fill in all fields');
+                return;
+            }
+            
+            // Add to assignments data
+            await schoolDB.addData('assignments', {
+                teacher: currentUser.name,
+                class: assignmentClass,
+                subject: subject,
+                assignment: details,
+                dueDate: dueDate,
+                status: 'pending',
+                feedback: ''
+            });
+            
+            // Update dashboard
+            updateTeacherDashboard();
+            
+            // Clear form
+            document.getElementById('assignment-class').value = '';
+            document.getElementById('assignment-subject').value = '';
+            document.getElementById('assignment-details').value = '';
+            document.getElementById('due-date').value = '';
+            
+            schoolDB.addActivity(`Assignment submitted by ${currentUser.name}`);
+            alert('Assignment submitted successfully!');
+        }
+
+        // Utility function to show messages
+        function showMessage(element, text, type) {
+            element.textContent = text;
+            element.className = `message ${type}`;
+            element.style.display = 'block';
+            
+            // Hide message after 3 seconds
+            setTimeout(() => {
+                element.style.display = 'none';
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
