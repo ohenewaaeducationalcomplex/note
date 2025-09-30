@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>School Management System</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f7f9fb; }
+        .card { background-color: white; border-radius: 1rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); }
+        .btn-primary { background-color: #4f46e5; color: white; padding: 0.75rem 1.5rem; border-radius: 0.5rem; font-weight: 600; transition: background-color 0.2s; }
+        .btn-primary:hover { background-color: #4338ca; }
+        .btn-llm { background-color: #10b981; color: white; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 600; transition: background-color 0.2s; }
+        .btn-llm:hover { background-color: #059669; }
+        .btn-danger { background-color: #ef4444; color: white; padding: 0.75rem 1.5rem; border-radius: 0.5rem; font-weight: 600; transition: background-color 0.2s; }
+        .btn-danger:hover { background-color: #dc2626; }
+        .btn-secondary { background-color: #f3f4f6; color: #4b5563; padding: 0.75rem 1.5rem; border-radius: 0.5rem; font-weight: 600; transition: background-color 0.2s; }
+        .btn-secondary:hover { background-color: #e5e7eb; }
+        /* Custom modal for confirmation/alerts */
+        .modal { z-index: 1000; background-color: rgba(0, 0, 0, 0.6); }
+        .modal-content { max-width: 90%; width: 400px; }
+    </style>
+</head>
+<body class="min-h-screen p-4 md:p-8">
+
+    <div id="app" class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-extrabold text-gray-900 tracking-tight">School Management Portal</h1>
+            <p id="auth-status" class="text-sm text-gray-500 mt-1"></p>
+        </header>
+
+        <!-- Main Content Area -->
+        <div id="content">
+            <!-- Content will be rendered here by JavaScript -->
+        </div>
+
+        <!-- Custom Modal Container -->
+        <div id="custom-modal" class="modal fixed inset-0 hidden items-center justify-center p-4">
+            <div class="modal-content card p-6">
+                <h3 id="modal-title" class="text-xl font-bold mb-4">Notification</h3>
+                <p id="modal-message" class="text-gray-700 mb-6"></p>
+                <div class="flex justify-end space-x-3">
+                    <button id="modal-cancel" class="btn-secondary hidden">Cancel</button>
+                    <button id="modal-confirm" class="btn-primary">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, onSnapshot, collection, query, where, getDocs, deleteDoc, runTransaction, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Global Firebase and App State
+        let app, db, auth;
+        let firebaseUID = null; // The underlying Firebase UID for DB access
+        let userId = null;      // The application-specific ID (Teacher ID or Admin ID)
+        let userName = "Guest";
+        let isAdmin = false;
+        let isAuthReady = false;
+        let adminUIDInput = null;
+        let isLoggedIn = false; // Tracks if a user has successfully logged in via the form
+        
+        let registeredTeachers = [];
+        let lessonNotes = [];
+        let attendanceRecords = [];
+
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        // Collections
+        const COLLECTION_NOTES = 'lesson_notes';
+        const COLLECTION_ATTENDANCE = 'attendance';
+        const COLLECTION_USERS = 'teacher_users'; // New collection for credentials
+        
+        // Gemini API Configuration
+        const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent";
+        const API_KEY = ""; // Canvas will automatically provide this at runtime
+
+        // --- Utility Functions ---
+
+        // 1. Modal Helper (replaces alert/confirm)
+        const showModal = (title, message, isConfirm = false) => {
+            return new Promise((resolve) => {
+                const modal = document.getElementById('custom-modal');
+                const titleEl = document.getElementById('modal-title');
+                const messageEl = document.getElementById('modal-message');
+                const confirmBtn = document.getElementById('modal-confirm');
+                const cancelBtn = document.getElementById('modal-cancel');
+
+                titleEl.textContent = title;
+                messageEl.textContent = message;
+
+                if (isConfirm) {
+                    cancelBtn.classList.remove('hidden');
+                    confirmBtn.textContent = 'Confirm';
+                } else {
+                    cancelBtn.classList.add('hidden');
+                    confirmBtn.textContent = 'OK';
+                }
+
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+
+                const cleanup = () => {
+                    modal.classList.add('hidden');
+                    modal.classList.remove('flex');
+                    confirmBtn.onclick = null;
+                    cancelBtn.onclick = null;
+                };
+
+                confirmBtn.onclick = () => {
+                    cleanup();
+                    resolve(true);
+                };
+                cancelBtn.onclick = () => {
+                    cleanup();
+                    resolve(false);
+                };
+            });
+        };
+
+        const getCurrentDateString = () => new Date().toISOString().split('T')[0];
+
+        const formatTimestamp = (timestamp) => {
+            if (!timestamp) return 'N/A';
+            const date = timestamp instanceof Date ? timestamp : new Date(timestamp);
+            return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        };
+
+        const createFirestorePath = (collectionName) => {
+            return `/artifacts/${appId}/public/data/${collectionName}`;
+        };
+        
+        const getTeacherNameFromId = (id) => {
+            // Retrieve name from registered teacher list if available
+            const registeredUser = registeredTeachers.find(u => u.id === id);
+            if (registeredUser) return registeredUser.name;
+            
+            // Fallback: Retrieve name from existing data for consistency
+            const existingRecord = attendanceRecords.find(r => r.teacherId === id);
+            if (existingRecord) return existingRecord.teacherName;
+            
+            const existingNote = lessonNotes.find(n => n.teacherId === id);
+            if (existingNote) return existingNote.teacherName;
+            
+            return `Teacher ${id.substring(0, 4)}`;
+        }
+        
+        // 2. Gemini API Wrapper (with Exponential Backoff)
+        const generateTextWithLLM = async (userQuery, systemPrompt, useSearch = false) => {
+            const payload = {
+                contents: [{ parts: [{ text: userQuery }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] },
+            };
+            
+            if (useSearch) {
+                payload.tools = [{ "google_search": {} }];
+            }
+
+            const maxRetries = 5;
+            let delay = 1000;
+
+            for (let i = 0; i < maxRetries; i++) {
+                try {
+                    const response = await fetch(`${GEMINI_API_URL}?key=${API_KEY}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (response.ok) {
+                        const result = await response.json();
+                        const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                        if (text) return text;
+                    } else {
+                         console.error("LLM API call failed with status:", response.status, await response.text());
+                    }
+                } catch (error) {
+                    console.error("LLM API call failed:", error);
+                }
+
+                if (i < maxRetries - 1) {
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    delay *= 2; // Exponential backoff
+                }
+            }
+
+            return "Error: Could not generate content from AI after multiple retries.";
+        };
+
+        // --- Firebase Core Initialization and Auth ---
+
+        if (firebaseConfig) {
+            setLogLevel('Debug');
+            app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+
+            // Authentication Listener
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    firebaseUID = user.uid; // Always keep track of the underlying Firebase UID
+                } else {
+                    firebaseUID = null;
+                }
+                isAuthReady = true;
+                render(); // Re-render application based on initial auth state
+            });
+
+            // Initial sign-in attempt
+            if (initialAuthToken) {
+                signInWithCustomToken(auth, initialAuthToken).catch(error => {
+                    console.error("Custom token sign-in failed, signing in anonymously:", error);
+                    signInAnonymously(auth).catch(err => console.error("Anonymous sign-in failed:", err));
+                });
+            } else {
+                signInAnonymously(auth).catch(err => console.error("Anonymous sign-in failed:", err));
+            }
+        } else {
+            document.getElementById('content').innerHTML = '<p class="text-red-500">Firebase configuration is missing. Cannot run the application.</p>';
+        }
+
+
+        // --- Firestore Data Listeners and Handlers ---
+
+        const setupFirestoreListeners = () => {
+            if (!db || !isAuthReady) return;
+
+            // 0. Listen for Registered Users
+            const usersPath = createFirestorePath(COLLECTION_USERS);
+            const usersQuery = query(collection(db, usersPath));
+            
+            onSnapshot(usersQuery, (snapshot) => {
+                // Store teacher credentials (id, name, password)
+                registeredTeachers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                render();
+            }, (error) => {
+                console.error("Error fetching registered users:", error);
+                showModal('Error', 'Failed to load user credentials data.');
+            });
+
+            // 1. Listen for Lesson Notes
+            const notesPath = createFirestorePath(COLLECTION_NOTES);
+            const notesQuery = query(collection(db, notesPath));
+            
+            onSnapshot(notesQuery, (snapshot) => {
+                lessonNotes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                render();
+            }, (error) => {
+                console.error("Error fetching lesson notes:", error);
+                showModal('Error', 'Failed to load lesson notes data.');
+            });
+
+            // 2. Listen for Attendance
+            const attendancePath = createFirestorePath(COLLECTION_ATTENDANCE);
+            const attendanceQuery = query(collection(db, attendancePath));
+
+            onSnapshot(attendanceQuery, (snapshot) => {
+                attendanceRecords = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                render();
+            }, (error) => {
+                console.error("Error fetching attendance records:", error);
+                showModal('Error', 'Failed to load attendance data.');
+            });
+        };
+
+        // --- LLM Handlers ---
+
+        const handleCritiqueGeneration = async () => {
+            const contentEl = document.getElementById('critique-output');
+            const critiqueBtn = document.getElementById('critique-btn');
+            const subject = document.getElementById('subject').value;
+            const topic = document.getElementById('topic').value;
+            const fulfillment = document.getElementById('guidelineFulfillment').value;
+            const content = document.getElementById('content').value;
+            
+            if (!subject || !topic || !fulfillment || !content) {
+                return showModal('Input Required', 'Please fill in Subject, Topic, Self-Assessment, and Lesson Content before requesting a critique.');
+            }
+
+            const originalCritiqueHtml = critiqueBtn.innerHTML;
+            contentEl.innerHTML = '<div class="flex items-center space-x-2 text-gray-500"><svg class="animate-spin h-5 w-5 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span>Generating critique...</span></div>';
+            critiqueBtn.disabled = true;
+
+            const systemPrompt = "You are an experienced, encouraging curriculum supervisor. Review the provided lesson note content against the teacher's self-assessment and the general requirements (clear objectives, assessment, learning outcomes). Provide feedback in three concise sections: **Strengths**, **Areas for Development**, and **Next Step Suggestions**. Keep the tone supportive and professional. Format your response using only bolding for section titles, followed by a list of points.";
+            
+            const userQuery = `Review this lesson note submission for the teacher named ${userName}.
+            - Subject: ${subject}
+            - Topic: ${topic}
+            - Teacher's Self-Assessment: ${fulfillment}
+            - Lesson Plan Content: ${content}`;
+
+            const critiqueText = await generateTextWithLLM(userQuery, systemPrompt);
+            
+            contentEl.innerHTML = `<div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200 text-sm whitespace-pre-wrap">${critiqueText}</div>`;
+            critiqueBtn.disabled = false;
+            critiqueBtn.innerHTML = originalCritiqueHtml;
+        };
+
+        const handleRationaleGeneration = async (note) => {
+            const form = document.getElementById('admin-grade-form');
+            const grade = form['grade-input'].value;
+            const commentInput = form['comment-input'];
+            const rationaleBtn = document.getElementById('rationale-btn');
+            
+            if (!grade) {
+                return showModal('Input Required', 'Please enter a Grade (0-10) before drafting the rationale.');
+            }
+            
+            const originalRationaleHtml = rationaleBtn.innerHTML;
+            rationaleBtn.disabled = true;
+            rationaleBtn.innerHTML = '<span class="flex items-center justify-center space-x-2"><svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span>Drafting...</span></span>';
+
+            const systemPrompt = "You are a professional educational administrator providing feedback to a teacher. Given the teacher's lesson note content and the assigned numerical grade (out of 10), draft a concise, three-paragraph comment for the teacher. Paragraph 1: Acknowledge the effort and state the grade clearly. Paragraph 2: Justify the score based on the note's quality, focusing on one strength and one specific area needing improvement in the submitted content. Paragraph 3: Provide one single, actionable suggestion for their next lesson note submission.";
+
+            const userQuery = `Teacher: ${note.teacherName} (ID: ${note.teacherId})
+            Subject: ${note.subject}
+            Topic: ${note.topic}
+            Grade Assigned: ${grade}/10
+            Lesson Plan Content: ${note.content}`;
+
+            const rationaleText = await generateTextWithLLM(userQuery, systemPrompt);
+
+            commentInput.value = rationaleText.trim();
+            rationaleBtn.innerHTML = originalRationaleHtml;
+            rationaleBtn.disabled = false;
+        };
+
+        // --- Attendance Clocking Handler (NEWLY ADDED) ---
+        const handleAttendanceClock = async (type, teacherId) => {
+            if (!db || !userId || !isAdmin) return showModal('Access Denied', 'Only Admin users can manage attendance.');
+            
+            const today = getCurrentDateString();
+            const attendancePath = createFirestorePath(COLLECTION_ATTENDANCE);
+            const attendanceCollectionRef = collection(db, attendancePath);
+            
+            // Find today's active record for the specific teacher
+            const q = query(
+                attendanceCollectionRef, 
+                where("teacherId", "==", teacherId),
+                where("date", "==", today),
+                where("isInactive", "==", false)
+            );
+
+            try {
+                // Use transaction for safe creation/update
+                await runTransaction(db, async (transaction) => {
+                    const snapshot = await getDocs(q);
+                    let docRef = null;
+                    
+                    if (snapshot.empty) {
+                        // Case 1: No record found, must be 'arrival'
+                        if (type === 'arrival') {
+                            const newRecord = {
+                                teacherId: teacherId,
+                                teacherName: getTeacherNameFromId(teacherId),
+                                date: today,
+                                arrival: Date.now(),
+                                departure: null,
+                                isInactive: false,
+                                createdAt: Date.now(),
+                                updatedBy: userId,
+                            };
+                            docRef = doc(attendanceCollectionRef); // Create a new doc reference
+                            transaction.set(docRef, newRecord);
+                            // Rerender will happen due to onSnapshot, but show success modal
+                            showModal('Success', `Attendance recorded for ${getTeacherNameFromId(teacherId)}: Clock In at ${formatTimestamp(newRecord.arrival)}.`);
+                        } else {
+                            // Trying to clock out without clocking in
+                            showModal('Error', `${getTeacherNameFromId(teacherId)} has not clocked in yet today.`);
+                        }
+                    } else {
+                        // Case 2: Record found, update it
+                        const existingDoc = snapshot.docs[0];
+                        docRef = existingDoc.ref;
+                        const existingData = existingDoc.data();
+                        
+                        if (type === 'arrival') {
+                             showModal('Error', `${getTeacherNameFromId(teacherId)} is already clocked in at ${formatTimestamp(existingData.arrival)}.`);
+                        } else if (type === 'departure') {
+                            if (existingData.departure) {
+                                showModal('Error', `${getTeacherNameFromId(teacherId)} is already clocked out at ${formatTimestamp(existingData.departure)}.`);
+                            } else {
+                                transaction.update(docRef, {
+                                    departure: Date.now(),
+                                    updatedBy: userId,
+                                });
+                                showModal('Success', `Attendance recorded for ${getTeacherNameFromId(teacherId)}: Clock Out at ${formatTimestamp(Date.now())}.`);
+                            }
+                        }
+                    }
+                });
+
+            } catch (error) {
+                console.error("Error managing attendance:", error);
+                showModal('Error', `Failed to process clock ${type}.`);
+            }
+        };
+
+        
+        // --- Authentication and Core Handlers (Remaining logic from previous version) ---
+        
+        const handleLogin = async (event) => {
+            event.preventDefault();
+            const form = event.target;
+            const teacherId = form.teacherId.value.trim();
+            const password = form.password.value;
+            
+            if (!db || !firebaseUID) {
+                return showModal('Error', 'System not ready. Please wait a moment.');
+            }
+
+            // 1. Check if the user is attempting to log in as the Admin (for local testing)
+            const adminId = adminUIDInput ? adminUIDInput.value : '';
+            if (teacherId === adminId && adminId.length > 0) {
+                userId = teacherId;
+                userName = "System Administrator";
+                isAdmin = true;
+                isLoggedIn = true;
+                showModal('Success', 'Logged in as Admin (Role set via Admin ID field).');
+                render();
+                return;
+            }
+
+            // 2. Check Teacher Credentials against Firestore
+            const teacher = registeredTeachers.find(u => u.id === teacherId);
+
+            if (teacher && teacher.password === password) {
+                if (teacher.isInactive) {
+                    return showModal('Access Denied', 'This teacher account is inactive.');
+                }
+                
+                userId = teacher.id;
+                userName = teacher.name;
+                isAdmin = false;
+                isLoggedIn = true;
+                showModal('Success', `Welcome, ${userName}!`);
+                render();
+            } else {
+                showModal('Login Failed', 'Invalid Teacher ID or Password.');
+            }
+        };
+
+        const handleLogout = () => {
+            userId = null;
+            userName = "Guest";
+            isAdmin = false;
+            isLoggedIn = false;
+            render();
+        }
+
+        const handleUpdateAuthStatus = () => {
+            const authStatusEl = document.getElementById('auth-status');
+            
+            if (isLoggedIn) {
+                authStatusEl.innerHTML = `Signed in as <span class="font-semibold text-indigo-600">${userName}</span> (App ID: <span class="font-mono">${userId}</span>). Role: <span class="font-semibold">${isAdmin ? 'ADMIN' : 'TEACHER'}</span>`;
+            } else {
+                 authStatusEl.innerHTML = `Not logged in. Underlying Firebase ID: <span class="font-mono text-xs">${firebaseUID ? firebaseUID.substring(0, 8) : '...'}</span>`;
+            }
+        };
+
+
+        const handleGradeNote = async (noteId, grade, comment) => {
+            if (!db || !userId || !isAdmin) return showModal('Access Denied', 'Only Admin users can grade notes.');
+
+            try {
+                const docRef = doc(db, createFirestorePath(COLLECTION_NOTES), noteId);
+                await updateDoc(docRef, {
+                    grade: parseInt(grade),
+                    adminComment: comment,
+                    status: 'Graded',
+                    updatedAt: Date.now()
+                });
+                showModal('Success', 'Lesson note graded and commented successfully.');
+            } catch (error) {
+                console.error("Error grading note:", error);
+                showModal('Error', 'Failed to grade lesson note.');
+            }
+        };
+        
+        // --- NEW: Handle Teacher Editing of Submitted Note ---
+        const handleLessonNoteEdit = async (event, noteId) => {
+            event.preventDefault();
+            if (!db || !userId) return showModal('Error', 'Authentication required.');
+            
+            const form = event.target;
+            const updatedNote = {
+                subject: form.subject.value,
+                topic: form.topic.value,
+                guidelineFulfillment: form.guidelineFulfillment.value,
+                content: form.content.value,
+                updatedAt: Date.now()
+            };
+
+            try {
+                const docRef = doc(db, createFirestorePath(COLLECTION_NOTES), noteId);
+                await updateDoc(docRef, updatedNote);
+                showModal('Success', 'Lesson note corrections saved successfully!');
+                closeNoteDetail(); // Close detail view after editing
+            } catch (error) {
+                console.error("Error updating lesson note:", error);
+                showModal('Error', 'Failed to save corrections to lesson note.');
+            }
+        };
+
+
+        const handleInactivateRecord = async (collectionName, recordId, isUser = false) => {
+            if (!db || !userId) return showModal('Access Denied', 'You must be signed in to perform this action.');
+            
+            // Only allow inactivation by Admin for TEACHER_USERS and ATTENDANCE
+            if (!isAdmin && (collectionName === COLLECTION_USERS || collectionName === COLLECTION_ATTENDANCE)) {
+                return showModal('Access Denied', 'Only Admin can delete/inactivate attendance or user records.');
+            }
+
+            const path = createFirestorePath(collectionName);
+            const confirm = await showModal('Confirm Inactivation', `Are you sure you want to mark this record in ${collectionName} as inactive?`, true);
+            if (!confirm) return;
+
+            try {
+                const docRef = doc(db, path, recordId);
+                await updateDoc(docRef, {
+                    isInactive: true,
+                    updatedAt: Date.now()
+                });
+                showModal('Success', (isUser ? 'User account' : 'Record') + ' marked as inactive successfully.');
+                if (collectionName === COLLECTION_NOTES && !isAdmin) {
+                    closeNoteDetail();
+                }
+            } catch (error) {
+                console.error(`Error inactivating record in ${collectionName}:`, error);
+                showModal('Error', `Failed to mark record inactive in ${collectionName}.`);
+            }
+        };
+        
+        const handleTeacherRegistration = async (event) => {
+            event.preventDefault();
+            if (!db || !isAdmin) return showModal('Access Denied', 'Only Admin can register new teachers.');
+
+            const form = event.target;
+            const id = form.newId.value.trim();
+            const name = form.newName.value.trim();
+            const password = form.newPassword.value;
+
+            if (registeredTeachers.some(u => u.id === id)) {
+                return showModal('Error', `Teacher ID "${id}" already exists. Use a unique ID.`);
+            }
+
+            if (id.length === 0 || name.length === 0 || password.length === 0) {
+                 return showModal('Error', `All fields are required.`);
+            }
+            
+            const newTeacher = {
+                id: id,
+                name: name,
+                password: password,
+                isInactive: false,
+                createdAt: Date.now()
+            };
+
+            try {
+                const docRef = doc(db, createFirestorePath(COLLECTION_USERS), id);
+                await setDoc(docRef, newTeacher);
+                showModal('Success', `Teacher ${name} (${id}) registered successfully! Password: ${password}`);
+                form.reset();
+            } catch (error) {
+                console.error("Error registering teacher:", error);
+                showModal('Error', 'Failed to register new teacher.');
+            }
+        };
+
+        const handleLessonNoteSubmit = async (event) => {
+            event.preventDefault();
+            if (!db || !userId) return showModal('Error', 'Authentication required.');
+
+            const form = event.target;
+            const note = {
+                teacherId: userId,
+                teacherName: userName,
+                date: getCurrentDateString(),
+                subject: form.subject.value,
+                topic: form.topic.value,
+                guidelineFulfillment: form.guidelineFulfillment.value,
+                content: form.content.value,
+                status: 'Submitted',
+                grade: null,
+                adminComment: null,
+                isInactive: false,
+                createdAt: Date.now()
+            };
+
+            try {
+                const notesPath = createFirestorePath(COLLECTION_NOTES);
+                await addDoc(collection(db, notesPath), note);
+                showModal('Success', 'Lesson note submitted for review!');
+                form.reset();
+                // Clear critique output after successful submission
+                document.getElementById('critique-output').innerHTML = '';
+            } catch (error) {
+                console.error("Error submitting lesson note:", error);
+                showModal('Error', 'Failed to submit lesson note.');
+            }
+        };
+
+
+        // --- Render Functions (Views) ---
+
+        const renderLoginPage = () => {
+             return `
+                <div class="card p-8 w-full md:max-w-md mx-auto space-y-6">
+                    <h2 class="text-2xl font-bold text-gray-800 text-center">Teacher Login</h2>
+                    <form id="teacher-login-form" onsubmit="handleLogin(event)" class="space-y-4">
+                        <div>
+                            <label for="teacher-id-input" class="block text-sm font-medium text-gray-700">Teacher ID (Username)</label>
+                            <input type="text" id="teacher-id-input" name="teacherId" required placeholder="e.g., T1001" class="w-full mt-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
+                        </div>
+                        <div>
+                            <label for="password-input" class="block text-sm font-medium text-gray-700">Password</label>
+                            <input type="password" id="password-input" name="password" required placeholder="******" class="w-full mt-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
+                        </div>
+                        <button type="submit" class="btn-primary w-full">Log In as Teacher</button>
+                    </form>
+                    
+                    <hr class="border-t border-gray-200">
+
+                    <!-- Admin Role Setup (For Demo Convenience Only) -->
+                    <div class="space-y-3">
+                        <p class="font-semibold text-gray-800 text-lg">Admin Role Access</p>
+                        <p class="text-sm text-red-600 font-medium">To start, log in with ID: <span class="font-mono bg-red-100 p-1 rounded">ADMIN-001</span>. Any password will work.</p>
+                        <label for="admin-uid-input" class="block text-sm font-medium text-gray-700">Set Admin User ID (used for Admin Login)</label>
+                        <input type="text" id="admin-uid-input" placeholder="e.g., ADMIN-USER-001" value="ADMIN-001" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                </div>
+            `;
+        };
+        
+        const renderTeacherAttendance = (todayRecord) => {
+            return `
+                <div class="card p-6 space-y-4">
+                    <h3 class="text-xl font-bold text-gray-700">My Daily Attendance Log</h3>
+                    <p class="text-sm text-gray-600 font-semibold">${getCurrentDateString()}</p>
+                    ${!todayRecord || todayRecord.isInactive ? 
+                        '<p class="text-red-500 font-semibold">No active attendance recorded for today. Please wait for the Admin to mark your attendance.</p>' : 
+                        `
+                        <div class="flex flex-col sm:flex-row gap-4">
+                            <div class="w-full p-3 bg-indigo-50 rounded-lg">
+                                <p class="text-sm text-indigo-700 font-medium">Arrival Time</p>
+                                <p class="text-2xl font-bold text-indigo-900">${todayRecord.arrival ? formatTimestamp(todayRecord.arrival) : 'N/A'}</p>
+                            </div>
+                            <div class="w-full p-3 bg-yellow-50 rounded-lg">
+                                <p class="text-sm text-yellow-700 font-medium">Departure Time</p>
+                                <p class="text-2xl font-bold text-yellow-900">${todayRecord.departure ? formatTimestamp(todayRecord.departure) : 'N/A'}</p>
+                            </div>
+                        </div>
+                        `
+                    }
+                </div>
+            `;
+        };
+
+        const renderLessonNoteForm = () => {
+            return `
+                <div class="card p-6 space-y-6">
+                    <h3 class="text-xl font-bold text-gray-700">Submit Lesson Notes</h3>
+                    <form id="lesson-note-form">
+                        <div class="space-y-4">
+                            <div>
+                                <label for="subject" class="block text-sm font-medium text-gray-700">Subject</label>
+                                <input type="text" id="subject" name="subject" required class="w-full mt-1 px-4 py-2 border border-gray-300 rounded-lg">
+                            </div>
+                            <div>
+                                <label for="topic" class="block text-sm font-medium text-gray-700">Topic</label>
+                                <input type="text" id="topic" name="topic" required class="w-full mt-1 px-4 py-2 border border-gray-300 rounded-lg">
+                            </div>
+                            <div>
+                                <p class="block text-sm font-medium text-gray-700 mb-1">Lesson Guideline</p>
+                                <ul class="text-xs text-gray-500 list-disc list-inside bg-gray-50 p-3 rounded-lg">
+                                    <li>Must align with curriculum objectives.</li>
+                                    <li>Include assessment method.</li>
+                                    <li>Provide clear learning outcomes.</li>
+                                </ul>
+                                <label for="guidelineFulfillment" class="block text-sm font-medium text-gray-700 mt-2">Guideline Fulfillment (Self-Assessment)</label>
+                                <textarea id="guidelineFulfillment" name="guidelineFulfillment" rows="2" required class="w-full mt-1 px-4 py-2 border border-gray-300 rounded-lg" placeholder="Explain how you met the guidelines..."></textarea>
+                            </div>
+                            <div>
+                                <label for="content" class="block text-sm font-medium text-gray-700">Lesson Note Content (Detailed Plan)</label>
+                                <textarea id="content" name="content" rows="6" required class="w-full mt-1 px-4 py-2 border border-gray-300 rounded-lg" placeholder="Write your full lesson plan here..."></textarea>
+                            </div>
+                            
+                            <!-- Gemini Feature 1: Critique -->
+                            <button type="button" id="critique-btn" onclick="handleCritiqueGeneration()" class="btn-llm w-full">
+                                ✨ Get Draft Critique
+                            </button>
+                            <div id="critique-output" class="mt-4">
+                                <!-- AI Critique output will go here -->
+                            </div>
+                            
+                        </div>
+                        <button type="submit" class="btn-primary w-full mt-6">Submit Note</button>
+                    </form>
+                </div>
+            `;
+        };
+
+        const renderTeacherNotesList = (notes) => {
+            const teacherNotes = notes
+                .filter(note => note.teacherId === userId)
+                .sort((a, b) => b.createdAt - a.createdAt);
+
+            return `
+                <div class="card p-6 space-y-4">
+                    <h3 class="text-xl font-bold text-gray-700">My Submitted Lesson Notes (${teacherNotes.length})</h3>
+                    <div class="space-y-3">
+                        ${teacherNotes.length === 0 ? '<p class="text-gray-500 italic">No lesson notes submitted yet.</p>' : ''}
+                        ${teacherNotes.map(note => `
+                            <div class="p-4 rounded-lg border flex justify-between items-center ${note.isInactive ? 'bg-gray-100 border-gray-300' : note.status === 'Graded' ? 'bg-green-50 border-green-200' : 'bg-blue-50 border-blue-200'}">
+                                <div>
+                                    <p class="font-semibold text-gray-800">${note.subject}: ${note.topic} <span class="text-xs ml-2 text-gray-500">(${note.date})</span></p>
+                                    <p class="text-sm ${note.isInactive ? 'text-red-600 font-bold' : note.status === 'Graded' ? 'text-green-600' : 'text-blue-600'}">
+                                        Status: ${note.isInactive ? 'Inactive (Deleted)' : note.status} 
+                                        ${note.grade ? ` (Grade: ${note.grade}/10)` : ''}
+                                    </p>
+                                </div>
+                                ${!note.isInactive ? `
+                                <button onclick="showNoteDetail('${note.id}')" class="text-indigo-600 hover:text-indigo-800 font-medium text-sm ml-4">
+                                    ${note.status === 'Graded' ? 'View Feedback' : 'Edit/View'}
+                                </button>
+                                `: ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        };
+        
+        const renderTeacherPortal = () => {
+            const today = getCurrentDateString();
+            const todayRecord = attendanceRecords.find(a => a.teacherId === userId && a.date === today && !a.isInactive);
+
+            return `
+                <div class="flex justify-end mb-4">
+                    <button onclick="handleLogout()" class="btn-secondary text-sm">Log Out</button>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="lg:col-span-1 space-y-8">
+                        ${renderTeacherAttendance(todayRecord)}
+                    </div>
+                    <div class="lg:col-span-2 space-y-8">
+                        ${renderLessonNoteForm()}
+                        ${renderTeacherNotesList(lessonNotes)}
+                    </div>
+                </div>
+            `;
+        };
+
+        // --- Admin Portal Components ---
+
+        let selectedNoteId = null;
+
+        const showNoteDetail = (noteId) => {
+            selectedNoteId = noteId;
+            render();
+        };
+        
+        const closeNoteDetail = () => {
+            selectedNoteId = null;
+            render();
+        };
+
+        const renderLessonNoteDetail = (note) => {
+            // Determine if the teacher can edit this note
+            const canTeacherEdit = !isAdmin && note.teacherId === userId && note.status === 'Submitted';
+            
+            // Determine if content fields should be editable (only if teacher is editing)
+            const inputClass = canTeacherEdit ? 'border border-yellow-300 bg-yellow-50' : 'border border-gray-300 bg-gray-100';
+
+            let detailContent = `
+                <div class="grid grid-cols-2 gap-4 text-sm mb-6">
+                    <p><strong>Teacher:</strong> ${note.teacherName} (${note.teacherId})</p>
+                    <p><strong>Date Submitted:</strong> ${note.date}</p>
+                    <p><strong>Status:</strong> <span class="font-bold text-${note.isInactive ? 'red' : note.status === 'Graded' ? 'green' : 'blue'}-600">${note.isInactive ? 'INACTIVE' : note.status}</span></p>
+                    <p><strong>Grade:</strong> ${note.grade ? `${note.grade}/10` : 'N/A'}</p>
+                </div>
+                
+                <form id="note-detail-form" ${canTeacherEdit ? `onsubmit="handleLessonNoteEdit(event, '${note.id}')"` : ''} class="space-y-6">
+                    
+                    <!-- Subject and Topic -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label for="detail-subject" class="block text-sm font-medium text-gray-700">Subject</label>
+                            <input type="text" id="detail-subject" name="subject" value="${note.subject}" required ${canTeacherEdit ? '' : 'readonly'} class="w-full mt-1 px-4 py-2 rounded-lg ${inputClass}">
+                        </div>
+                        <div>
+                            <label for="detail-topic" class="block text-sm font-medium text-gray-700">Topic</label>
+                            <input type="text" id="detail-topic" name="topic" value="${note.topic}" required ${canTeacherEdit ? '' : 'readonly'} class="w-full mt-1 px-4 py-2 rounded-lg ${inputClass}">
+                        </div>
+                    </div>
+
+                    <!-- Self-Assessment -->
+                    <div>
+                        <p class="font-semibold text-lg text-gray-700">Teacher's Self-Assessment (Guidelines)</p>
+                        <textarea id="detail-guidelineFulfillment" name="guidelineFulfillment" rows="3" required ${canTeacherEdit ? '' : 'readonly'} class="w-full mt-1 px-4 py-2 rounded-lg whitespace-pre-wrap ${inputClass}">${note.guidelineFulfillment}</textarea>
+                    </div>
+
+                    <!-- Lesson Content -->
+                    <div>
+                        <p class="font-semibold text-lg text-gray-700">Lesson Content</p>
+                        <textarea id="detail-content" name="content" rows="10" required ${canTeacherEdit ? '' : 'readonly'} class="w-full mt-1 px-4 py-2 rounded-lg whitespace-pre-wrap ${inputClass}">${note.content}</textarea>
+                    </div>
+                    
+                    <!-- Teacher Edit Button -->
+                    ${canTeacherEdit ? `
+                        <div class="flex space-x-3 pt-2">
+                            <button type="submit" class="btn-primary flex-1 bg-yellow-600 hover:bg-yellow-700">Save Corrections</button>
+                            <button type="button" onclick="handleInactivateRecord('${COLLECTION_NOTES}', '${note.id}')" class="btn-danger flex-1">Delete Note</button>
+                        </div>
+                    ` : ''}
+                </form>
+            `;
+
+            // Admin Grading / Teacher Graded View
+            if (isAdmin || note.status === 'Graded') {
+                detailContent += `
+                    <div class="border-t pt-4 space-y-4 mt-6">
+                        <h4 class="text-xl font-bold text-${isAdmin ? 'indigo' : 'green'}-700">${isAdmin ? 'Admin Review' : 'Admin Feedback & Grade'}</h4>
+                    
+                        ${note.status === 'Graded' ? `
+                            <p class="font-semibold text-lg">Final Grade: ${note.grade}/10</p>
+                            <div class="bg-green-50 p-3 rounded-lg border border-green-200">
+                                <p class="whitespace-pre-wrap">${note.adminComment}</p>
+                            </div>
+                            <div class="flex justify-end mt-4">
+                                <button type="button" onclick="handleInactivateRecord('${COLLECTION_NOTES}', '${note.id}')" class="btn-danger p-2 text-sm">Delete Note</button>
+                            </div>
+                        ` : ''}
+
+                        ${isAdmin ? `
+                            <form id="admin-grade-form" class="space-y-4">
+                                <div>
+                                    <label for="grade-input" class="block text-sm font-medium text-gray-700">Grade (0-10)</label>
+                                    <input type="number" id="grade-input" min="0" max="10" value="${note.grade || 0}" required class="w-full mt-1 px-4 py-2 border border-gray-300 rounded-lg">
+                                </div>
+                                
+                                <button type="button" id="rationale-btn" onclick="handleRationaleGeneration({ id: '${note.id}', teacherName: '${note.teacherName}', teacherId: '${note.teacherId}', subject: '${note.subject}', topic: '${note.topic}', content: \`${note.content.replace(/`/g, '\\`')}\` })" class="btn-llm w-full text-sm mt-2">
+                                    ✨ Draft Grading Rationale
+                                </button>
+                                
+                                <div>
+                                    <label for="comment-input" class="block text-sm font-medium text-gray-700 mt-2">Comment</label>
+                                    <textarea id="comment-input" rows="6" required class="w-full mt-1 px-4 py-2 border border-gray-300 rounded-lg">${note.adminComment || ''}</textarea>
+                                </div>
+                                
+                                <div class="flex space-x-3 mt-4">
+                                    <button type="submit" class="btn-primary flex-1">Save Grade & Comment</button>
+                                    <button type="button" onclick="handleInactivateRecord('${COLLECTION_NOTES}', '${note.id}')" class="btn-danger flex-1">Mark Inactive (Delete)</button>
+                                </div>
+                            </form>
+                        ` : ''}
+                    </div>
+                `;
+            } else if (!isAdmin && !canTeacherEdit) {
+                 // Teacher viewing submitted note (view-only awaiting grade)
+                 detailContent += `
+                    <div class="border-t pt-4 space-y-2 mt-6">
+                        <p class="text-lg font-semibold text-blue-600">Awaiting Admin Review</p>
+                        <p class="text-sm text-gray-500">You cannot make corrections while the note is pending review. Check back later for feedback.</p>
+                        <div class="flex justify-end mt-4">
+                            <button type="button" onclick="handleInactivateRecord('${COLLECTION_NOTES}', '${note.id}')" class="btn-danger p-2 text-sm">Delete Note</button>
+                        </div>
+                    </div>
+                 `;
+            }
+
+            const finalHtml = `
+                <div class="card p-8 space-y-6">
+                    <div class="flex justify-between items-start">
+                        <h3 class="text-2xl font-bold text-gray-800">${note.subject}: ${note.topic}</h3>
+                        <button onclick="closeNoteDetail()" class="text-gray-500 hover:text-gray-700">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        </button>
+                    </div>
+                    ${detailContent}
+                </div>
+            `;
+
+            // Attach Admin grading form listener
+            if (isAdmin) {
+                setTimeout(() => {
+                    const adminForm = document.getElementById('admin-grade-form');
+                    if (adminForm) {
+                        adminForm.onsubmit = (e) => {
+                            e.preventDefault();
+                            const grade = adminForm['grade-input'].value;
+                            const comment = adminForm['comment-input'].value;
+                            handleGradeNote(note.id, grade, comment);
+                        };
+                    }
+                }, 0);
+            }
+            return finalHtml;
+        };
+
+        const renderAdminAttendanceMarking = (notes, records) => {
+            const today = getCurrentDateString();
+            
+            // Get unique active teacher IDs from registered teachers
+            const teacherIds = registeredTeachers
+                .filter(u => !u.isInactive)
+                .map(u => u.id);
+            
+            // Map IDs to records and sort the current user last
+            const teachersData = teacherIds.map(id => {
+                const todayRecord = records.find(r => r.teacherId === id && r.date === today && !r.isInactive);
+                const name = getTeacherNameFromId(id);
+                const isClockedIn = todayRecord && todayRecord.arrival;
+                const isClockedOut = todayRecord && todayRecord.departure;
+                
+                return { id, name, todayRecord, isClockedIn, isClockedOut };
+            }).sort((a, b) => (a.id === userId ? 1 : b.id === userId ? -1 : 0)); 
+
+            return `
+                <div class="card p-6 space-y-4">
+                    <h3 class="text-xl font-bold text-gray-700">Attendance Marking (${today})</h3>
+                    <p class="text-sm text-gray-500">Mark arrival and departure for all active teachers.</p>
+                    <div class="space-y-3 max-h-96 overflow-y-auto">
+                        ${teachersData.length === 0 ? '<p class="text-gray-500 italic">No active teachers found. Register a teacher in User Management.</p>' : ''}
+                        ${teachersData.map(teacher => `
+                            <div class="p-4 rounded-lg border flex flex-col md:flex-row justify-between items-center ${teacher.isClockedOut ? 'bg-green-50 border-green-200' : teacher.isClockedIn ? 'bg-blue-50 border-blue-200' : 'bg-gray-50 border-gray-200'}">
+                                <div class="w-full md:w-1/3 mb-2 md:mb-0">
+                                    <p class="font-semibold text-gray-800">${teacher.name}</p>
+                                    <p class="text-xs text-gray-500 font-mono">${teacher.id}</p>
+                                </div>
+                                <div class="w-full md:w-1/3 flex justify-around text-sm text-gray-700 space-x-2">
+                                    <span class="font-medium">Arr: <span class="font-bold">${teacher.todayRecord?.arrival ? formatTimestamp(teacher.todayRecord.arrival) : 'N/A'}</span></span>
+                                    <span class="font-medium">Dep: <span class="font-bold">${teacher.todayRecord?.departure ? formatTimestamp(teacher.todayRecord.departure) : 'N/A'}</span></span>
+                                </div>
+                                <div class="w-full md:w-1/3 flex space-x-2 mt-3 md:mt-0 justify-end">
+                                    <button 
+                                        onclick="handleAttendanceClock('arrival', '${teacher.id}')" 
+                                        class="btn-primary p-2 text-xs w-1/2 ${teacher.isClockedIn ? 'opacity-50 cursor-not-allowed' : ''}" 
+                                        ${teacher.isClockedIn ? 'disabled' : ''}>
+                                        Clock In
+                                    </button>
+                                    <button 
+                                        onclick="handleAttendanceClock('departure', '${teacher.id}')" 
+                                        class="btn-danger p-2 text-xs w-1/2 ${!teacher.isClockedIn || teacher.isClockedOut ? 'opacity-50 cursor-not-allowed' : ''}" 
+                                        ${!teacher.isClockedIn || teacher.isClockedOut ? 'disabled' : ''}>
+                                        Clock Out
+                                    </button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        };
+
+
+        const renderAdminNotesList = (notes) => {
+             const activeNotes = notes.filter(n => !n.isInactive).sort((a, b) => b.createdAt - a.createdAt);
+
+            return `
+                <div class="card p-6 space-y-4">
+                    <h3 class="text-xl font-bold text-gray-700 mb-4">All Active Lesson Notes (${activeNotes.length})</h3>
+                    <div class="space-y-3">
+                        ${activeNotes.length === 0 ? '<p class="text-gray-500 italic">No active lesson notes found.</p>' : ''}
+                        ${activeNotes.map(note => `
+                            <div class="p-4 rounded-lg border flex justify-between items-center ${note.status === 'Graded' ? 'bg-green-50 border-green-200' : 'bg-blue-50 border-blue-200'}">
+                                <div>
+                                    <p class="font-semibold text-gray-800">${note.subject}: ${note.topic}</p>
+                                    <p class="text-sm text-gray-600">By ${note.teacherName} (${note.teacherId}) on ${note.date}</p>
+                                    <p class="text-sm ${note.status === 'Graded' ? 'text-green-600 font-bold' : 'text-blue-600 font-bold'}">
+                                        Status: ${note.status} ${note.grade ? ` (Grade: ${note.grade}/10)` : ''}
+                                    </p>
+                                </div>
+                                <div class="flex space-x-2">
+                                    <button onclick="showNoteDetail('${note.id}')" class="btn-primary p-2 text-xs">Review</button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        };
+        
+        const renderAdminTeacherManagement = () => {
+             const activeTeachers = registeredTeachers.filter(u => !u.isInactive);
+            const inactiveTeachers = registeredTeachers.filter(u => u.isInactive);
+
+            return `
+                <div class="card p-6 space-y-6">
+                    <h3 class="text-xl font-bold text-indigo-700">Teacher Account Management</h3>
+
+                    <!-- Registration Form -->
+                    <div class="bg-indigo-50 p-4 rounded-lg space-y-3">
+                        <h4 class="font-bold text-lg text-indigo-800">Register New Teacher</h4>
+                        <form id="teacher-registration-form" onsubmit="handleTeacherRegistration(event)" class="space-y-3">
+                            <div>
+                                <label for="new-id" class="block text-sm font-medium text-gray-700">Teacher ID (Username)</label>
+                                <input type="text" id="new-id" name="newId" required placeholder="e.g., T2002" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                            </div>
+                             <div>
+                                <label for="new-name" class="block text-sm font-medium text-gray-700">Full Name</label>
+                                <input type="text" id="new-name" name="newName" required placeholder="e.g., Jane Doe" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                            </div>
+                            <div>
+                                <label for="new-password" class="block text-sm font-medium text-gray-700">Password</label>
+                                <input type="text" id="new-password" name="newPassword" required placeholder="Temporary Password" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                            </div>
+                            <button type="submit" class="btn-primary w-full text-sm">Register Account</button>
+                        </form>
+                    </div>
+
+                    <!-- Teacher List -->
+                    <div class="space-y-3">
+                        <h4 class="font-bold text-lg text-gray-800">Active Teachers (${activeTeachers.length})</h4>
+                        <div class="space-y-2 max-h-48 overflow-y-auto">
+                            ${activeTeachers.map(user => `
+                                <div class="p-3 bg-white border rounded-lg flex justify-between items-center text-sm">
+                                    <div>
+                                        <p class="font-semibold">${user.name} (<span class="font-mono">${user.id}</span>)</p>
+                                        <p class="text-xs text-red-500">Pass: ${user.password}</p>
+                                    </div>
+                                    <button onclick="handleInactivateRecord('${COLLECTION_USERS}', '${user.id}', true)" class="btn-danger p-2 text-xs">Inactivate</button>
+                                </div>
+                            `).join('')}
+                        </div>
+                        ${inactiveTeachers.length > 0 ? `<p class="text-xs text-gray-500 italic mt-2">(${inactiveTeachers.length} inactive accounts hidden)</p>` : ''}
+                    </div>
+                </div>
+            `;
+        };
+
+        const renderAdminPortal = () => {
+            if (selectedNoteId) {
+                const note = lessonNotes.find(n => n.id === selectedNoteId);
+                return note ? renderLessonNoteDetail(note) : '<p class="text-red-500">Note not found.</p>';
+            }
+
+            return `
+                <div class="flex justify-between mb-4">
+                    <h2 class="text-2xl font-bold text-gray-800">Admin Dashboard</h2>
+                    <button onclick="handleLogout()" class="btn-secondary text-sm">Log Out</button>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="lg:col-span-1 space-y-8">
+                        ${renderAdminTeacherManagement()}
+                        ${renderAdminAttendanceMarking(lessonNotes, attendanceRecords)}
+                    </div>
+                    <div class="lg:col-span-2 space-y-8">
+                        ${renderAdminNotesList(lessonNotes)}
+                    </div>
+                </div>
+            `;
+        };
+
+        // --- Main Render Loop ---
+
+        const render = () => {
+            const contentEl = document.getElementById('content');
+            
+            handleUpdateAuthStatus(); // Update header status on every render
+
+            if (!isAuthReady) {
+                contentEl.innerHTML = '<div class="text-center p-10"><p class="text-xl text-gray-600">Loading authentication...</p></div>';
+                return;
+            }
+
+            // Set up Admin UID input reference once
+            if (!adminUIDInput) {
+                adminUIDInput = document.getElementById('admin-uid-input');
+            }
+
+
+            if (!isLoggedIn) {
+                // Not logged in, show login/setup
+                contentEl.innerHTML = renderLoginPage();
+                return;
+            }
+
+            // Logged in, set up listeners once and show dashboard
+            if (db && firebaseUID && !contentEl.dataset.listenersSetup) {
+                setupFirestoreListeners();
+                contentEl.dataset.listenersSetup = 'true';
+            }
+
+            if (isAdmin) {
+                contentEl.innerHTML = renderAdminPortal();
+            } else {
+                contentEl.innerHTML = renderTeacherPortal();
+            }
+
+            // Re-attach form listener after rendering Teacher Portal
+            if (!isAdmin) {
+                const form = document.getElementById('lesson-note-form');
+                if (form) form.onsubmit = handleLessonNoteSubmit;
+            }
+        };
+
+        // Expose functions to the global scope for inline event handlers (e.g., onclick)
+        window.handleLogin = handleLogin;
+        window.handleLogout = handleLogout;
+        window.handleAttendanceClock = handleAttendanceClock;
+        window.handleInactivateRecord = handleInactivateRecord;
+        window.handleTeacherRegistration = handleTeacherRegistration;
+        window.showNoteDetail = showNoteDetail;
+        window.closeNoteDetail = closeNoteDetail;
+        
+        // Expose new LLM and Edit functions
+        window.handleCritiqueGeneration = handleCritiqueGeneration;
+        window.handleRationaleGeneration = handleRationaleGeneration;
+        window.handleLessonNoteEdit = handleLessonNoteEdit; // NEW
+
+        // Initial render call after the script loads
+        document.addEventListener('DOMContentLoaded', render);
+
+    </script>
+</body>
+</html>
