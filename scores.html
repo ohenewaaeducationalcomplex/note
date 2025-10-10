@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Score Management System</title>
+    <style>
+        body {
+            font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f7fafc;
+            color: #2d3748;
+            line-height: 1.6;
+        }
+        h1, h2, h3 {
+            color: #1a202c;
+            font-weight: 700;
+        }
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        h2 {
+            font-size: 1.75rem;
+            margin-bottom: 0.75rem;
+        }
+        h3 {
+            font-size: 1.25rem;
+            margin-bottom: 0.5rem;
+        }
+        .hidden {
+            display: none;
+        }
+        .section {
+            margin-bottom: 2rem;
+            background: #ffffff;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .section:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+        }
+        #home-section {
+            text-align: center;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        #home-section img.logo {
+            width: 100px;
+            height: auto;
+            margin-bottom: 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        #home-section .chart-container {
+            max-width: 700px;
+            margin: 2rem auto;
+            padding: 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            background: #f8fafc;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        .class-item, .student-item {
+            border: 1px solid #e2e8f0;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 0.375rem;
+            background: #f9fafb;
+            transition: background 0.2s, transform 0.2s;
+        }
+        .class-item:hover, .student-item:hover {
+            background: #edf2f7;
+            transform: translateY(-1px);
+        }
+        .student-item img {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            margin-right: 1rem;
+            object-fit: cover;
+            border: 2px solid #e2e8f0;
+        }
+        .modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.95);
+            background: #ffffff;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            max-width: 400px;
+            width: 90%;
+            opacity: 0;
+            transition: transform 0.2s ease, opacity 0.2s ease;
+        }
+        .modal.show {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+        }
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 999;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+        .overlay.show {
+            opacity: 1;
+        }
+        button {
+            padding: 0.5rem 1rem;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+            border: none;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+        }
+        button.primary {
+            background: #3182ce;
+            color: #ffffff;
+        }
+        button.primary:hover {
+            background: #2b6cb0;
+            transform: translateY(-1px);
+        }
+        button.secondary {
+            background: #a0aec0;
+            color: #ffffff;
+        }
+        button.secondary:hover {
+            background: #718096;
+            transform: translateY(-1px);
+        }
+        button.delete {
+            background: #e53e3e;
+            color: #ffffff;
+        }
+        button.delete:hover {
+            background: #c53030;
+            transform: translateY(-1px);
+        }
+        input[type="text"], input[type="number"], input[type="file"], select {
+            padding: 0.5rem;
+            margin-bottom: 0.75rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.375rem;
+            width: 100%;
+            max-width: 300px;
+            font-size: 0.875rem;
+            transition: border-color 0.2s;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #3182ce;
+            box-shadow: 0 0 0 2px rgba(49, 130, 206, 0.2);
+        }
+        #student-details .profile-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            gap: 1.5rem;
+        }
+        #student-details .profile-container img {
+            width: 96px;
+            height: 96px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #3182ce;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        #student-details .scores-container {
+            margin-top: 1rem;
+        }
+        #student-details .scores-container label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        #student-details .scores-container span {
+            color: #4a5568;
+            font-size: 0.875rem;
+        }
+        #class-details .filter-container {
+            margin-bottom: 1.5rem;
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+        li {
+            font-size: 0.875rem;
+        }
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            .section {
+                padding: 1rem;
+            }
+            #home-section .chart-container {
+                max-width: 100%;
+            }
+            #student-details .profile-container {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+            #student-details .profile-container img {
+                margin-bottom: 0.5rem;
+            }
+            button, input, select {
+                width: 100%;
+                margin-right: 0;
+                font-size: 0.875rem;
+            }
+            .modal {
+                width: 95%;
+                padding: 1rem;
+            }
+        }
+        @media (max-width: 400px) {
+            h1 {
+                font-size: 1.75rem;
+            }
+            h2 {
+                font-size: 1.25rem;
+            }
+            h3 {
+                font-size: 1rem;
+            }
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- Homepage Section -->
+    <div id="home-section" class="section">
+        <img src="images/oec.jpg" class="logo" alt="School Logo">
+        <h1>Welcome to the Student Score Management System</h1>
+        <p>Track and manage student performance with ease.</p>
+        <div class="chart-container">
+            <canvas id="class-performance-chart"></canvas>
+        </div>
+        <button class="primary" onclick="showScoreManagement()">Manage Scores</button>
+    </div>
+
+    <!-- Score Management Section -->
+    <div id="score-management-section" class="section hidden">
+        <button class="secondary" onclick="backToHome()">Back to Home</button>
+        <h2>Score Management</h2>
+
+        <!-- Subjects Section -->
+        <div id="subjects-section" class="section">
+            <h3>Subjects</h3>
+            <ul id="subjects-list"></ul>
+            <input type="text" id="new-subject" placeholder="New Subject">
+            <button class="primary" onclick="addSubject()">Add Subject</button>
+        </div>
+
+        <!-- Classes Section -->
+        <div id="classes-section" class="section">
+            <h3>Classes</h3>
+            <ul id="classes-list"></ul>
+            <input type="text" id="new-class" placeholder="New Class Name">
+            <button class="primary" onclick="addClass()">Add Class</button>
+        </div>
+
+        <!-- Class Details Section -->
+        <div id="class-details" class="section hidden">
+            <h3 id="class-name"></h3>
+            <button class="secondary" onclick="backToClasses()">Back to Classes</button>
+            <button class="primary" onclick="sortStudents()">Sort Students by Name</button>
+            <button class="primary" onclick="downloadClassPDF()">Download Class Scores PDF</button>
+            <div class="filter-container">
+                <input type="number" id="score-filter" placeholder="Filter by Score (e.g., 70)" min="0" max="100">
+                <button class="primary" onclick="filterStudentsByScore()">Filter Students</button>
+                <button class="secondary" onclick="clearFilter()">Clear Filter</button>
+                <select id="score-conversion" onchange="applyScoreConversion()">
+                    <option value="">No Conversion</option>
+                    <option value="letter">Letter Grades (A-F)</option>
+                </select>
+            </div>
+            <ul id="students-list"></ul>
+            <button class="primary" onclick="showAddStudentModal()">Add Student</button>
+        </div>
+
+        <!-- Student Details Section -->
+        <div id="student-details" class="section hidden">
+            <div class="profile-container">
+                <img id="student-pic" src="" alt="Profile Pic" width="96" height="96">
+                <div>
+                    <h3 id="student-name"></h3>
+                    <button class="primary" onclick="showEditStudentModal()">Edit Student</button>
+                    <button class="secondary" onclick="backToClass()">Back to Class</button>
+                </div>
+            </div>
+            <div id="scores-form" class="scores-container"></div>
+            <button class="primary" onclick="saveScores()">Save Scores</button>
+            <button class="delete" onclick="deleteScores()">Delete All Scores</button>
+            <button class="primary" onclick="downloadPDF()">Download PDF</button>
+        </div>
+
+        <!-- Add Student Modal -->
+        <div id="add-student-modal" class="modal hidden">
+            <h3>Add Student</h3>
+            <input type="text" id="student-name-input" placeholder="Student Name">
+            <input type="file" id="student-pic-input" accept="image/*">
+            <button class="primary" onclick="addStudent()">Save</button>
+            <button class="secondary" onclick="hideAddStudentModal()">Cancel</button>
+        </div>
+
+        <!-- Edit Student Modal -->
+        <div id="edit-student-modal" class="modal hidden">
+            <h3>Edit Student</h3>
+            <input type="text" id="edit-student-name-input" placeholder="Student Name">
+            <input type="file" id="edit-student-pic-input" accept="image/*">
+            <button class="primary" onclick="updateStudent()">Save</button>
+            <button class="secondary" onclick="hideEditStudentModal()">Cancel</button>
+        </div>
+        <div id="overlay" class="overlay hidden"></div>
+
+    <script>
+        let data = {
+            subjects: [],
+            classes: []
+        };
+        let currentClassIndex = -1;
+        let currentStudentIndex = -1;
+        let filteredStudents = null;
+        let scoreConversion = '';
+        let chartInstance = null;
+
+        const conversionSets = {
+            letter: [
+                { range: [90, 100], grade: 'A', midpoint: 95 },
+                { range: [80, 89], grade: 'B', midpoint: 85 },
+                { range: [70, 79], grade: 'C', midpoint: 75 },
+                { range: [60, 69], grade: 'D', midpoint: 65 },
+                { range: [0, 59], grade: 'F', midpoint: 50 }
+            ]
+        };
+
+        function convertScore(score) {
+            if (!scoreConversion || score === '') return { display: score, value: score ? parseFloat(score) : 0 };
+            const numScore = parseFloat(score);
+            if (isNaN(numScore)) return { display: '', value: 0 };
+            const set = conversionSets[scoreConversion];
+            for (const conv of set) {
+                if (numScore >= conv.range[0] && numScore <= conv.range[1]) {
+                    return { display: conv.grade, value: conv.midpoint };
+                }
+            }
+            return { display: '', value: 0 };
+        }
+
+        function loadData() {
+            const stored = localStorage.getItem('studentData');
+            if (stored) {
+                data = JSON.parse(stored);
+            }
+            renderChart();
+            showHome();
+        }
+
+        function saveData() {
+            localStorage.setItem('studentData', JSON.stringify(data));
+            renderChart();
+        }
+
+        function showHome() {
+            document.getElementById('home-section').classList.remove('hidden');
+            document.getElementById('score-management-section').classList.add('hidden');
+        }
+
+        function showScoreManagement() {
+            document.getElementById('home-section').classList.add('hidden');
+            document.getElementById('score-management-section').classList.remove('hidden');
+            renderSubjects();
+            renderClasses();
+        }
+
+        function renderChart() {
+            const ctx = document.getElementById('class-performance-chart').getContext('2d');
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+
+            const classAverages = data.classes.map(cls => {
+                const students = cls.students;
+                if (students.length === 0) return 0;
+                let total = 0;
+                let count = 0;
+                students.forEach(stu => {
+                    Object.values(stu.scores).forEach(score => {
+                        if (score !== '') {
+                            total += convertScore(score).value;
+                            count++;
+                        }
+                    });
+                });
+                return count > 0 ? total / count : 0;
+            });
+
+            chartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.classes.map(cls => cls.name),
+                    datasets: [{
+                        label: scoreConversion ? 'Average Converted Score' : 'Average Score',
+                        data: classAverages,
+                        backgroundColor: 'rgba(49, 130, 206, 0.6)',
+                        borderColor: 'rgba(49, 130, 206, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            title: {
+                                display: true,
+                                text: scoreConversion ? 'Average Converted Score' : 'Average Score',
+                                font: { size: 14 }
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Classes',
+                                font: { size: 14 }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        title: {
+                            display: true,
+                            text: 'Class Performance Overview',
+                            font: { size: 16 }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderSubjects() {
+            const list = document.getElementById('subjects-list');
+            list.innerHTML = '';
+            data.subjects.forEach((sub, index) => {
+                const li = document.createElement('li');
+                li.textContent = sub;
+                const delBtn = document.createElement('button');
+                delBtn.textContent = 'Delete';
+                delBtn.className = 'delete';
+                delBtn.onclick = () => deleteSubject(index);
+                li.appendChild(delBtn);
+                list.appendChild(li);
+            });
+        }
+
+        function addSubject() {
+            const input = document.getElementById('new-subject');
+            if (input.value.trim()) {
+                data.subjects.push(input.value.trim());
+                saveData();
+                renderSubjects();
+                input.value = '';
+            }
+        }
+
+        function deleteSubject(index) {
+            data.subjects.splice(index, 1);
+            data.classes.forEach(cls => {
+                cls.students.forEach(stu => {
+                    delete stu.scores[data.subjects[index]];
+                });
+            });
+            saveData();
+            renderSubjects();
+        }
+
+        function renderClasses() {
+            const list = document.getElementById('classes-list');
+            list.innerHTML = '';
+            data.classes.forEach((cls, index) => {
+                const li = document.createElement('li');
+                li.className = 'class-item';
+                li.textContent = cls.name;
+                const viewBtn = document.createElement('button');
+                viewBtn.textContent = 'View';
+                viewBtn.className = 'primary';
+                viewBtn.onclick = () => viewClass(index);
+                const delBtn = document.createElement('button');
+                delBtn.textContent = 'Delete';
+                delBtn.className = 'delete';
+                delBtn.onclick = () => deleteClass(index);
+                li.appendChild(viewBtn);
+                li.appendChild(delBtn);
+                list.appendChild(li);
+            });
+        }
+
+        function addClass() {
+            const input = document.getElementById('new-class');
+            if (input.value.trim()) {
+                data.classes.push({ name: input.value.trim(), students: [] });
+                saveData();
+                renderClasses();
+                input.value = '';
+            }
+        }
+
+        function deleteClass(index) {
+            data.classes.splice(index, 1);
+            saveData();
+            renderClasses();
+        }
+
+        function viewClass(index) {
+            currentClassIndex = index;
+            document.getElementById('class-name').textContent = data.classes[index].name;
+            filteredStudents = null;
+            scoreConversion = '';
+            document.getElementById('score-conversion').value = '';
+            renderStudents();
+            document.getElementById('classes-section').classList.add('hidden');
+            document.getElementById('class-details').classList.remove('hidden');
+            document.getElementById('subjects-section').classList.add('hidden');
+            document.getElementById('score-filter').value = '';
+            document.querySelector('#add-student-modal').classList.remove('show');
+            document.querySelector('#edit-student-modal').classList.remove('show');
+            document.querySelector('#overlay').classList.remove('show');
+        }
+
+        function backToClasses() {
+            currentClassIndex = -1;
+            filteredStudents = null;
+            scoreConversion = '';
+            document.getElementById('score-conversion').value = '';
+            renderChart();
+            document.getElementById('classes-section').classList.remove('hidden');
+            document.getElementById('class-details').classList.add('hidden');
+            document.getElementById('subjects-section').classList.remove('hidden');
+        }
+
+        function backToHome() {
+            document.getElementById('score-management-section').classList.add('hidden');
+            document.getElementById('home-section').classList.remove('hidden');
+            renderChart();
+        }
+
+        function renderStudents() {
+            const list = document.getElementById('students-list');
+            list.innerHTML = '';
+            const students = filteredStudents || data.classes[currentClassIndex].students;
+            students.forEach((stu, index) => {
+                const li = document.createElement('li');
+                li.className = 'student-item';
+                if (stu.profilePic) {
+                    const img = document.createElement('img');
+                    img.src = stu.profilePic;
+                    li.appendChild(img);
+                }
+                li.appendChild(document.createTextNode(stu.name));
+                const viewBtn = document.createElement('button');
+                viewBtn.textContent = 'View/Edit Scores';
+                viewBtn.className = 'primary';
+                viewBtn.onclick = () => viewStudent(index);
+                const delBtn = document.createElement('button');
+                delBtn.textContent = 'Delete';
+                delBtn.className = 'delete';
+                delBtn.onclick = () => deleteStudent(index);
+                li.appendChild(viewBtn);
+                li.appendChild(delBtn);
+                list.appendChild(li);
+            });
+        }
+
+        function showAddStudentModal() {
+            document.getElementById('add-student-modal').classList.remove('hidden');
+            document.getElementById('add-student-modal').classList.add('show');
+            document.getElementById('overlay').classList.remove('hidden');
+            document.getElementById('overlay').classList.add('show');
+            document.getElementById('student-name-input').value = '';
+            document.getElementById('student-pic-input').value = '';
+        }
+
+        function hideAddStudentModal() {
+            document.getElementById('add-student-modal').classList.remove('show');
+            document.getElementById('add-student-modal').classList.add('hidden');
+            document.getElementById('overlay').classList.remove('show');
+            document.getElementById('overlay').classList.add('hidden');
+        }
+
+        function showEditStudentModal() {
+            const student = data.classes[currentClassIndex].students[currentStudentIndex];
+            document.getElementById('edit-student-name-input').value = student.name;
+            document.getElementById('edit-student-pic-input').value = '';
+            document.getElementById('edit-student-modal').classList.remove('hidden');
+            document.getElementById('edit-student-modal').classList.add('show');
+            document.getElementById('overlay').classList.remove('hidden');
+            document.getElementById('overlay').classList.add('show');
+        }
+
+        function hideEditStudentModal() {
+            document.getElementById('edit-student-modal').classList.remove('show');
+            document.getElementById('edit-student-modal').classList.add('hidden');
+            document.getElementById('overlay').classList.remove('show');
+            document.getElementById('overlay').classList.add('hidden');
+        }
+
+        function addStudent() {
+            const name = document.getElementById('student-name-input').value.trim();
+            const fileInput = document.getElementById('student-pic-input');
+            if (name) {
+                const student = { name, scores: {} };
+                data.subjects.forEach(sub => {
+                    student.scores[sub] = '';
+                });
+                if (fileInput.files.length > 0) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        student.profilePic = e.target.result;
+                        data.classes[currentClassIndex].students.push(student);
+                        saveData();
+                        renderStudents();
+                        hideAddStudentModal();
+                    };
+                    reader.readAsDataURL(fileInput.files[0]);
+                } else {
+                    data.classes[currentClassIndex].students.push(student);
+                    saveData();
+                    renderStudents();
+                    hideAddStudentModal();
+                }
+            }
+        }
+
+        function updateStudent() {
+            const name = document.getElementById('edit-student-name-input').value.trim();
+            const fileInput = document.getElementById('edit-student-pic-input');
+            if (name) {
+                const student = data.classes[currentClassIndex].students[currentStudentIndex];
+                student.name = name;
+                if (fileInput.files.length > 0) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        student.profilePic = e.target.result;
+                        saveData();
+                        document.getElementById('student-name').textContent = student.name;
+                        document.getElementById('student-pic').src = student.profilePic || '';
+                        renderStudents();
+                        hideEditStudentModal();
+                    };
+                    reader.readAsDataURL(fileInput.files[0]);
+                } else {
+                    saveData();
+                    document.getElementById('student-name').textContent = student.name;
+                    renderStudents();
+                    hideEditStudentModal();
+                }
+            }
+        }
+
+        function deleteStudent(index) {
+            data.classes[currentClassIndex].students.splice(index, 1);
+            saveData();
+            renderStudents();
+        }
+
+        function viewStudent(index) {
+            currentStudentIndex = index;
+            const student = data.classes[currentClassIndex].students[index];
+            document.getElementById('student-name').textContent = student.name;
+            const pic = document.getElementById('student-pic');
+            pic.src = student.profilePic || '';
+            renderScoresForm(student);
+            document.getElementById('class-details').classList.add('hidden');
+            document.getElementById('student-details').classList.remove('hidden');
+        }
+
+        function renderScoresForm(student) {
+            const form = document.getElementById('scores-form');
+            form.innerHTML = '<h3>Scores</h3>';
+            data.subjects.forEach(sub => {
+                const label = document.createElement('label');
+                const score = student.scores[sub];
+                const converted = convertScore(score);
+                label.textContent = `${sub}: `;
+                const input = document.createElement('input');
+                input.type = 'number';
+                input.value = score || '';
+                input.dataset.subject = sub;
+                label.appendChild(input);
+                if (scoreConversion && score !== '') {
+                    const gradeSpan = document.createElement('span');
+                    gradeSpan.textContent = ` (${converted.display})`;
+                    label.appendChild(gradeSpan);
+                }
+                form.appendChild(label);
+                form.appendChild(document.createElement('br'));
+            });
+        }
+
+        function applyScoreConversion() {
+            scoreConversion = document.getElementById('score-conversion').value;
+            if (currentStudentIndex !== -1) {
+                const student = data.classes[currentClassIndex].students[currentStudentIndex];
+                renderScoresForm(student);
+            }
+            renderChart();
+        }
+
+        function saveScores() {
+            const student = data.classes[currentClassIndex].students[currentStudentIndex];
+            const inputs = document.querySelectorAll('#scores-form input');
+            inputs.forEach(input => {
+                student.scores[input.dataset.subject] = input.value;
+            });
+            saveData();
+            renderScoresForm(student);
+            alert('Scores saved!');
+        }
+
+        function deleteScores() {
+            if (confirm('Are you sure you want to delete all scores for this student?')) {
+                const student = data.classes[currentClassIndex].students[currentStudentIndex];
+                for (const sub in student.scores) {
+                    student.scores[sub] = '';
+                }
+                saveData();
+                renderScoresForm(student);
+                alert('All scores deleted for ' + student.name);
+            }
+        }
+
+        function sortStudents() {
+            data.classes[currentClassIndex].students.sort((a, b) => a.name.localeCompare(b.name));
+            saveData();
+            renderStudents();
+            alert('Students sorted by name.');
+        }
+
+        function filterStudentsByScore() {
+            const threshold = parseInt(document.getElementById('score-filter').value);
+            if (isNaN(threshold)) {
+                alert('Please enter a valid score threshold.');
+                return;
+            }
+            filteredStudents = data.classes[currentClassIndex].students.filter(student => 
+                Object.values(student.scores).some(score => score !== '' && parseInt(score) >= threshold)
+            );
+            renderStudents();
+        }
+
+        function clearFilter() {
+            filteredStudents = null;
+            scoreConversion = '';
+            document.getElementById('score-filter').value = '';
+            document.getElementById('score-conversion').value = '';
+            renderStudents();
+            renderChart();
+        }
+
+        function backToClass() {
+            currentStudentIndex = -1;
+            document.getElementById('class-details').classList.remove('hidden');
+            document.getElementById('student-details').classList.add('hidden');
+            renderStudents();
+        }
+
+        function downloadPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const student = data.classes[currentClassIndex].students[currentStudentIndex];
+            
+            doc.setFontSize(18);
+            doc.text('Student Score Report', 105, 20, { align: 'center' });
+            
+            doc.setFontSize(12);
+            doc.text(`Name: ${student.name}`, 20, 40);
+            
+            let y = 60;
+            if (student.profilePic) {
+                doc.addImage(student.profilePic, 'JPEG', 20, y, 50, 50);
+                y += 60;
+            }
+            
+            doc.text('Scores:', 20, y);
+            y += 10;
+            for (const [sub, score] of Object.entries(student.scores)) {
+                if (score !== '') {
+                    const converted = convertScore(score);
+                    const display = scoreConversion ? `${score} (${converted.display})` : score;
+                    doc.text(`${sub}: ${display}`, 20, y);
+                    y += 10;
+                }
+            }
+            
+            doc.save(`${student.name}_scores.pdf`);
+        }
+
+        function downloadClassPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const classData = data.classes[currentClassIndex];
+            const students = filteredStudents || classData.students;
+            let y = 20;
+
+            doc.setFontSize(18);
+            doc.text(`${classData.name} - All Students Score Report`, 105, y, { align: 'center' });
+            y += 20;
+
+            if (students.length === 0) {
+                doc.setFontSize(12);
+                doc.text('No students in this class.', 20, y);
+                doc.save(`${classData.name}_scores.pdf`);
+                return;
+            }
+
+            students.forEach((student, index) => {
+                if (y > 250) {
+                    doc.addPage();
+                    y = 20;
+                }
+                doc.setFontSize(14);
+                doc.text(`Student: ${student.name}`, 20, y);
+                y += 10;
+
+                if (student.profilePic) {
+                    doc.addImage(student.profilePic, 'JPEG', 20, y, 30, 30);
+                    y += 40;
+                }
+
+                doc.setFontSize(12);
+                doc.text('Scores:', 20, y);
+                y += 10;
+
+                let hasScores = false;
+                for (const [sub, score] of Object.entries(student.scores)) {
+                    if (score !== '') {
+                        const converted = convertScore(score);
+                        const display = scoreConversion ? `${score} (${converted.display})` : score;
+                        doc.text(`${sub}: ${display}`, 20, y);
+                        y += 10;
+                        hasScores = true;
+                    }
+                }
+                if (!hasScores) {
+                    doc.text('No scores recorded.', 20, y);
+                    y += 10;
+                }
+
+                y += 10;
+                if (index < students.length - 1) {
+                    doc.line(20, y, 190, y);
+                    y += 10;
+                }
+            });
+
+            doc.save(`${classData.name}_scores.pdf`);
+        }
+
+        loadData();
+    </script>
+</body>
+</html>
