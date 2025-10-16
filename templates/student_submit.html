@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Submit — {{ a.title }}{% endblock %}
+{% block content %}
+<div class="card p-4">
+  <h5 class="mb-3">{{ a.title }}</h5>
+  <div class="small text-muted mb-3">
+    Class: {{ a.class_name or 'All' }}
+    {% if a.due_date %} • Due {{ a.due_date.strftime('%Y-%m-%d %H:%M') }}{% endif %}
+    • Allowed: {{ 'Text' if a.allow_text else '' }}{% if a.allow_text and a.allow_pdf %} &amp; {% endif %}{{ 'PDF' if a.allow_pdf else '' }}
+  </div>
+  <form method="post" enctype="multipart/form-data" class="row g-3">
+    {% if a.allow_text %}
+    <div class="col-12">
+      <label class="form-label">Your Answer (text)</label>
+      <textarea name="text_answer" class="form-control" rows="6" placeholder="Type your answer..."></textarea>
+    </div>
+    {% endif %}
+    {% if a.allow_pdf %}
+    <div class="col-12">
+      <label class="form-label">Or Upload PDF</label>
+      <input type="file" name="pdf" class="form-control" accept="application/pdf">
+    </div>
+    {% endif %}
+    <div class="col-12 d-flex gap-2">
+      <button class="btn btn-primary">Submit</button>
+      <a class="btn btn-outline-secondary" href="{{ url_for('list_assignments') }}">Back</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

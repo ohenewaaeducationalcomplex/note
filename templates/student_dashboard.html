@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Student Dashboard{% endblock %}
+{% block content %}
+<div class="card p-3">
+  <h5 class="mb-3">Assignments</h5>
+  <div class="table-responsive">
+    <table class="table align-middle">
+      <thead><tr><th>#</th><th>Title</th><th>Class</th><th>Due</th><th></th></tr></thead>
+      <tbody>
+        {% for a in assignments %}
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td class="fw-semibold">{{ a.title }}</td>
+          <td>{{ a.class_name or 'All' }}</td>
+          <td>{% if a.due_date %}{{ a.due_date.strftime('%Y-%m-%d %H:%M') }}{% else %}—{% endif %}</td>
+          <td class="text-end"><a class="btn btn-sm btn-primary" href="{{ url_for('submit_assignment', assignment_id=a.id) }}">Open</a></td>
+        </tr>
+        {% else %}
+          <tr><td colspan="5" class="text-center text-muted">No assignments</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

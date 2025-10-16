@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Edit Teacher{% endblock %}
+{% block content %}
+<div class="card p-4">
+  <h4 class="mb-3">Edit Teacher</h4>
+  <form method="post" class="row g-3">
+    <div class="col-md-6"><label class="form-label">Full name</label><input name="full_name" class="form-control" value="{{ u.full_name }}" required></div>
+    <div class="col-md-6"><label class="form-label">Username</label><input name="username" class="form-control" value="{{ u.username }}" required></div>
+    <div class="col-md-6"><label class="form-label">Security PIN</label><input name="security_pin" class="form-control" value="{{ u.security_pin or '' }}"></div>
+    <div class="col-12 d-flex gap-2">
+      <button class="btn btn-primary">Save</button>
+      <a class="btn btn-outline-secondary" href="{{ url_for('admin_teachers') }}">Back</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

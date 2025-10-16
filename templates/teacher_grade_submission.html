@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Mark Submission{% endblock %}
+{% block content %}
+<div class="card p-4">
+  <h5 class="mb-3">{{ a.title }} — Mark Submission</h5>
+  <div class="mb-3">
+    {% if s.text_answer %}
+      <label class="form-label">Text Answer</label>
+      <div class="p-3 border rounded" style="white-space:pre-wrap">{{ s.text_answer }}</div>
+    {% endif %}
+    {% if s.pdf_path %}
+      <div class="mt-2"><a href="{{ url_for('serve_pdf', filename=s.pdf_path) }}" target="_blank" class="btn btn-outline-primary btn-sm">Open PDF</a></div>
+    {% endif %}
+  </div>
+  <form method="post" class="row g-3">
+    <div class="col-md-4">
+      <label class="form-label">Score (max {{ a.max_score }})</label>
+      <input type="number" step="0.01" name="score" class="form-control" value="{{ s.score or '' }}">
+    </div>
+    <div class="col-md-4"><label class="form-label">Grade</label><input name="grade" class="form-control" value="{{ s.grade or '' }}"></div>
+    <div class="col-12"><label class="form-label">Feedback</label><textarea name="feedback" class="form-control" rows="4">{{ s.feedback or '' }}</textarea></div>
+    <div class="col-12 d-flex gap-2">
+      <button class="btn btn-primary">Save</button>
+      <a class="btn btn-outline-secondary" href="{{ url_for('teacher_assignment_submissions', assignment_id=a.id) }}">Back</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

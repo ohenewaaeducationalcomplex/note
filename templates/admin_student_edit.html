@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Edit Student{% endblock %}
+{% block content %}
+<div class="card p-4">
+  <h4 class="mb-3">Edit Student</h4>
+  <form method="post" class="row g-3">
+    <div class="col-md-6"><label class="form-label">Full name</label><input name="full_name" class="form-control" value="{{ u.full_name }}" required></div>
+    <div class="col-md-6"><label class="form-label">Username</label><input name="username" class="form-control" value="{{ u.username }}" required></div>
+    <div class="col-md-4">
+      <label class="form-label">Class</label>
+      <select name="class_name" class="form-select">
+        <option value="">—</option>
+        {% for c in classes %}
+        <option value="{{ c.name }}" {{ 'selected' if u.class_name==c.name }}>{{ c.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-4"><label class="form-label">DOB</label><input name="dob" class="form-control" value="{{ u.dob or '' }}" placeholder="YYYY-MM-DD"></div>
+    <div class="col-md-4"><label class="form-label">Security PIN</label><input name="security_pin" class="form-control" value="{{ u.security_pin or '' }}"></div>
+    <div class="col-12 d-flex gap-2">
+      <button class="btn btn-primary">Save</button>
+      <a class="btn btn-outline-secondary" href="{{ url_for('admin_students') }}">Back</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

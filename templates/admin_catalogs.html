@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Catalogs{% endblock %}
+{% block content %}
+<div class="row g-3">
+  <div class="col-lg-6">
+    <div class="card p-3 h-100">
+      <h5 class="mb-3">Classes</h5>
+      <form class="d-flex gap-2 mb-3" method="post">
+        <input type="hidden" name="mode" value="add_class">
+        <input name="class_name" class="form-control" placeholder="e.g. JHS 1">
+        <button class="btn btn-primary">Add</button>
+      </form>
+      <div class="table-responsive">
+        <table class="table">
+          <thead><tr><th>#</th><th>Name</th><th></th></tr></thead>
+          <tbody>
+            {% for c in classes %}
+            <tr>
+              <td>{{ loop.index }}</td>
+              <td>{{ c.name }}</td>
+              <td class="text-end">
+                <form method="post" class="d-inline">
+                  <input type="hidden" name="mode" value="delete_class">
+                  <input type="hidden" name="cid" value="{{ c.id }}">
+                  <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete class?')">Delete</button>
+                </form>
+              </td>
+            </tr>
+            {% else %}
+              <tr><td colspan="3" class="text-center text-muted">No classes</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card p-3 h-100">
+      <h5 class="mb-3">Subjects</h5>
+      <form class="row g-2 mb-3" method="post">
+        <input type="hidden" name="mode" value="add_subject">
+        <div class="col-md-6"><input name="subject_name" class="form-control" placeholder="e.g. Mathematics"></div>
+        <div class="col-md-4">
+          <select name="for_class" class="form-select">
+            <option value="">All Classes</option>
+            {% for c in classes %}<option>{{ c.name }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="col-md-2"><button class="btn btn-primary w-100">Add</button></div>
+      </form>
+      <div class="table-responsive">
+        <table class="table">
+          <thead><tr><th>#</th><th>Subject</th><th>Class</th><th></th></tr></thead>
+          <tbody>
+            {% for s in subjects %}
+            <tr>
+              <td>{{ loop.index }}</td>
+              <td>{{ s.name }}</td>
+              <td>{{ s.class_name or 'All' }}</td>
+              <td class="text-end">
+                <form method="post" class="d-inline">
+                  <input type="hidden" name="mode" value="delete_subject">
+                  <input type="hidden" name="sid" value="{{ s.id }}">
+                  <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete subject?')">Delete</button>
+                </form>
+              </td>
+            </tr>
+            {% else %}
+              <tr><td colspan="4" class="text-center text-muted">No subjects</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

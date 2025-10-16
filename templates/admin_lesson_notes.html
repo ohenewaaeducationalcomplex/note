@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block content %}
+<h3>Lesson Notes — Review</h3>
+
+<div class="card p-3 mb-3">
+  <form class="row g-2" method="get">
+    <div class="col-md-3">
+      <input name="q" value="{{ request.args.get('q','') }}" class="form-control" placeholder="Search subject/topic/teacher">
+    </div>
+    <div class="col-md-3">
+      <select name="status" class="form-select">
+        {% set s = request.args.get('status','') %}
+        <option value="" {{ 'selected' if s=='' }}>All Status</option>
+        <option value="PENDING" {{ 'selected' if s=='PENDING' }}>PENDING</option>
+        <option value="APPROVED" {{ 'selected' if s=='APPROVED' }}>APPROVED</option>
+        <option value="REVISE" {{ 'selected' if s=='REVISE' }}>REVISE</option>
+      </select>
+    </div>
+    <div class="col-md-3">
+      <button class="btn btn-primary">Filter</button>
+      <a href="{{ url_for('admin_lesson_notes') }}" class="btn btn-outline-secondary">Reset</a>
+    </div>
+  </form>
+</div>
+
+<div class="card p-3">
+  <div class="table-responsive">
+    <table class="table align-middle">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Date</th>
+          <th>Teacher</th>
+          <th>Subject</th>
+          <th>Topic</th>
+          <th>Status</th>
+          <th>Admin Comment</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for n in notes %}
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td>{{ n.created_at.strftime('%Y-%m-%d') }}</td>
+          <td>{{ n.teacher.full_name }}</td>
+          <td>{{ n.subject }}</td>
+          <td>{{ n.topic }}</td>
+          <td>
+            <span class="badge
+              {% if n.status=='APPROVED' %}text-bg-success
+              {% elif n.status=='REVISE' %}text-bg-warning
+              {% else %}text-bg-secondary{% endif %}">
+              {{ n.status }}
+            </span>
+          </td>
+          <td class="text-truncate" style="max-width: 240px;">
+            {{ (n.admin_comment or '-') }}
+          </td>
+          <td class="text-end">
+            <!-- View / Review button opens modal with full content -->
+            <button class="btn btn-sm btn-outline-primary"
+                    data-bs-toggle="modal"
+                    data-bs-target="#noteModal{{ n.id }}">
+              View / Review
+            </button>
+          </td>
+        </tr>
+
+        <!-- Modal with full content + review form -->
+        <div class="modal fade" id="noteModal{{ n.id }}" tabindex="-1" aria-hidden="true">
+          <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+              <div class="modal-header">
+                <div>
+                  <h5 class="modal-title">{{ n.subject }} — {{ n.topic }}</h5>
+                  <div class="small text-muted">
+                    By {{ n.teacher.full_name }} • {{ n.created_at.strftime('%Y-%m-%d %H:%M') }}
+                    • Status: <strong>{{ n.status }}</strong>
+                  </div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+
+              <div class="modal-body">
+                <label class="form-label fw-semibold">Lesson Note Content</label>
+                <div class="p-3 border rounded" style="white-space:pre-wrap; background:#fafafa">
+                  {{ n.content }}
+                </div>
+
+                <hr class="my-3">
+
+                <form method="post" class="row g-3">
+                  <input type="hidden" name="note_id" value="{{ n.id }}">
+                  <div class="col-md-4">
+                    <label class="form-label">Update Status</label>
+                    <select name="status" class="form-select">
+                      <option value="PENDING" {{ 'selected' if n.status=='PENDING' }}>PENDING</option>
+                      <option value="APPROVED" {{ 'selected' if n.status=='APPROVED' }}>APPROVED</option>
+                      <option value="REVISE" {{ 'selected' if n.status=='REVISE' }}>REVISE</option>
+                    </select>
+                  </div>
+                  <div class="col-12">
+                    <label class="form-label">Admin Comment (visible to teacher)</label>
+                    <textarea name="admin_comment" rows="3" class="form-control"
+                              placeholder="Short guidance or approval note...">{{ n.admin_comment or '' }}</textarea>
+                  </div>
+                  <div class="col-12 d-flex gap-2">
+                    <button class="btn btn-primary">Save</button>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                  </div>
+                </form>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      {% else %}
+        <tr><td colspan="8" class="text-center text-muted">No lesson notes found.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}

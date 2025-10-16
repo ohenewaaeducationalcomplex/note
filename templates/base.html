@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}OEC{% endblock %}</title>
+
+  <!-- Favicon / Crest -->
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/crest.png') }}">
+
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Global light theme styled with school colors -->
+  <style>
+    :root{
+      --oh-blue:#0b3d91;    /* crest blue */
+      --oh-gold:#f4b400;    /* crest gold */
+      --oh-green:#16a34a;   /* crest green */
+    }
+    body{ background:#f6f8fb; color:#0b1320; }
+    .navbar{ box-shadow:0 4px 18px rgba(0,0,0,.05); }
+    .navbar .nav-link.active{ color:var(--oh-blue)!important; font-weight:600; }
+    .card{ border:1px solid rgba(0,0,0,.06); border-radius:16px; box-shadow:0 8px 24px rgba(0,0,0,.05); }
+    .btn-primary{ background:var(--oh-blue); border-color:var(--oh-blue); }
+    .btn-outline-primary{ color:var(--oh-blue); border-color:var(--oh-blue); }
+    .btn-outline-primary:hover{ background:var(--oh-blue); color:#fff; }
+    .crest-brand{
+      width:28px;height:28px;border-radius:50%; object-fit:cover;
+      background:#fff; border:1px solid rgba(0,0,0,.08);
+    }
+    .brand-title{ line-height:1.2; font-weight:700; color:#0b1320; }
+    .content-wrap{ padding-top:24px; padding-bottom:40px; }
+    .footer-min{ color:#6c757d; }
+    .table thead th{ font-weight:700; color:#0b1320; }
+  </style>
+
+  {% block head_extra %}{% endblock %}
+</head>
+<body>
+
+  <!-- Top Navbar -->
+  <nav class="navbar navbar-expand-lg bg-white">
+    <div class="container">
+      <a class="navbar-brand d-flex align-items-center gap-2" href="{{ url_for('dashboard') }}">
+        <img class="crest-brand" src="{{ url_for('static', filename='img/crest.png') }}" alt="crest">
+        <span class="brand-title">OEC</span>
+      </a>
+
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#topnav" aria-controls="topnav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="topnav">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          {% if current_user.is_authenticated %}
+            {% if current_user.role == 'ADMIN' %}
+              <li class="nav-item"><a class="nav-link {% if request.endpoint=='dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">Dashboard</a></li>
+              <li class="nav-item"><a class="nav-link {% if request.endpoint in ['admin_students','admin_student_edit'] %}active{% endif %}" href="{{ url_for('admin_students') }}">Students</a></li>
+              <li class="nav-item"><a class="nav-link {% if request.endpoint in ['admin_teachers','admin_teacher_edit'] %}active{% endif %}" href="{{ url_for('admin_teachers') }}">Teachers</a></li>
+              <li class="nav-item"><a class="nav-link {% if request.endpoint=='admin_catalogs' %}active{% endif %}" href="{{ url_for('admin_catalogs') }}">Catalogs</a></li>
+              <li class="nav-item"><a class="nav-link {% if request.endpoint=='admin_attendance' %}active{% endif %}" href="{{ url_for('admin_attendance') }}">Attendance</a></li>
+              <li class="nav-item"><a class="nav-link {% if request.endpoint=='admin_attendance_history' %}active{% endif %}" href="{{ url_for('admin_attendance_history') }}">Attendance History</a></li>
+              <li class="nav-item"><a class="nav-link {% if request.endpoint=='admin_lesson_notes' %}active{% endif %}" href="{{ url_for('admin_lesson_notes') }}">Lesson Notes</a></li>
+            {% elif current_user.role == 'TEACHER' %}
+              <li class="nav-item"><a class="nav-link {% if request.endpoint=='dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">Dashboard</a></li>
+              <li class="nav-item"><a class="nav-link {% if request.endpoint in ['teacher_assignments','teacher_assignment_submissions'] %}active{% endif %}" href="{{ url_for('teacher_assignments') }}">Assignments</a></li>
+              <li class="nav-item"><a class="nav-link {% if request.endpoint=='teacher_lesson_notes' %}active{% endif %}" href="{{ url_for('teacher_lesson_notes') }}">Lesson Notes</a></li>
+            {% elif current_user.role == 'STUDENT' %}
+              <li class="nav-item"><a class="nav-link {% if request.endpoint=='dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">Dashboard</a></li>
+              <li class="nav-item"><a class="nav-link {% if request.endpoint in ['list_assignments','submit_assignment'] %}active{% endif %}" href="{{ url_for('list_assignments') }}">Assignments</a></li>
+            {% endif %}
+          {% endif %}
+        </ul>
+
+        <ul class="navbar-nav ms-auto">
+          {% if current_user.is_authenticated %}
+            <li class="nav-item d-flex align-items-center me-2">
+              <span class="small text-muted">Signed in as&nbsp;</span>
+              <span class="badge text-bg-light border">{{ current_user.full_name }} ({{ current_user.role }})</span>
+            </li>
+            <li class="nav-item"><a class="btn btn-outline-primary btn-sm" href="{{ url_for('logout') }}">Logout</a></li>
+          {% else %}
+            <li class="nav-item"><a class="btn btn-primary btn-sm" href="{{ url_for('login') }}">Login</a></li>
+          {% endif %}
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Flash messages -->
+  <div class="container mt-3" id="flash-wrap">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ 'warning' if category=='message' else category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+  </div>
+
+  <!-- Main content -->
+  <main class="container content-wrap">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-top bg-white py-3">
+    <div class="container d-flex flex-wrap justify-content-between align-items-center">
+      <span class="footer-min small">© {{ current_year }} OEC</span>
+      <span class="small footer-min">Education for Progress</span>
+    </div>
+  </footer>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Flash auto-dismiss after 3s -->
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+      const wrap = document.getElementById('flash-wrap');
+      if (wrap){
+        setTimeout(()=> {
+          wrap.querySelectorAll('.alert').forEach(a=>{
+            const alert = bootstrap.Alert.getOrCreateInstance(a);
+            alert.close();
+          });
+        }, 3000);
+      }
+    });
+  </script>
+
+  {% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Lesson Notes{% endblock %}
+{% block content %}
+<div class="row g-3">
+  <div class="col-lg-5">
+    <div class="card p-3">
+      <h5 class="mb-3">Submit Lesson Note</h5>
+      <form method="post" class="row g-2">
+        <div class="col-12"><input name="subject" class="form-control" placeholder="Subject" required></div>
+        <div class="col-12"><input name="topic" class="form-control" placeholder="Topic" required></div>
+        <div class="col-12"><textarea name="content" rows="8" class="form-control" placeholder="Content" required></textarea></div>
+        <div class="col-12"><button class="btn btn-primary w-100">Submit</button></div>
+      </form>
+    </div>
+  </div>
+  <div class="col-lg-7">
+    <div class="card p-3">
+      <h5 class="mb-3">My Notes</h5>
+      <div class="table-responsive">
+        <table class="table">
+          <thead><tr><th>#</th><th>Subject/Topic</th><th>Date</th><th>Status</th><th>Admin Comment</th></tr></thead>
+          <tbody>
+            {% for n in notes %}
+            <tr>
+              <td>{{ loop.index }}</td>
+              <td><div class="fw-semibold">{{ n.subject }}</div><div class="small text-muted">{{ n.topic }}</div></td>
+              <td>{{ n.created_at.strftime('%Y-%m-%d') }}</td>
+              <td>{{ n.status }}</td>
+              <td>{{ n.admin_comment or '—' }}</td>
+            </tr>
+            {% else %}
+              <tr><td colspan="5" class="text-center text-muted">No notes</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

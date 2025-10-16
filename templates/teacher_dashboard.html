@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Teacher Dashboard{% endblock %}
+{% block content %}
+<div class="row g-3">
+  <div class="col-lg-6">
+    <div class="card p-3">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h5 class="mb-0">My Assignments</h5>
+        <a class="btn btn-sm btn-primary" href="{{ url_for('teacher_assignments') }}">Open</a>
+      </div>
+      <ul class="list-group list-group-flush">
+        {% for a in my_assignments %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          <div>
+            <div class="fw-semibold">{{ a.title }}</div>
+            <div class="small text-muted">Class: {{ a.class_name or 'All' }}{% if a.due_date %} • Due {{ a.due_date.strftime('%Y-%m-%d %H:%M') }}{% endif %}</div>
+          </div>
+          <a class="btn btn-sm btn-outline-primary" href="{{ url_for('teacher_assignment_submissions', assignment_id=a.id) }}">View</a>
+        </li>
+        {% else %}
+        <li class="list-group-item text-muted">No assignments yet.</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card p-3">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h5 class="mb-0">My Lesson Notes</h5>
+        <a class="btn btn-sm btn-primary" href="{{ url_for('teacher_lesson_notes') }}">Open</a>
+      </div>
+      <ul class="list-group list-group-flush">
+        {% for n in my_notes %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          <div>
+            <div class="fw-semibold">{{ n.subject }} — {{ n.topic }}</div>
+            <div class="small text-muted">{{ n.created_at.strftime('%Y-%m-%d') }} • {{ n.status }}</div>
+          </div>
+        </li>
+        {% else %}
+        <li class="list-group-item text-muted">No notes yet.</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}My Assignments{% endblock %}
+{% block content %}
+<style>
+  .a-card{ border:1px solid rgba(0,0,0,.06); border-radius:16px; box-shadow:0 8px 24px rgba(0,0,0,.05); }
+  .desc-clamp{
+    display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical;
+    overflow:hidden;
+  }
+  details summary { cursor: pointer; }
+</style>
+
+<h4 class="mb-3">My Assignments</h4>
+
+{% if assignments %}
+  <div class="row g-3">
+    {% for a in assignments %}
+      <div class="col-12">
+        <div class="card a-card p-3">
+          <div class="d-flex flex-wrap justify-content-between align-items-start gap-2">
+            <div>
+              <h5 class="mb-1">{{ a.title }}</h5>
+              <div class="text-muted small">
+                {% if a.class_name %}For class: <span class="fw-semibold">{{ a.class_name }}</span> · {% endif %}
+                Posted {{ a.created_at.strftime("%Y-%m-%d %H:%M") if a.created_at else "" }}
+                {% if a.due_date %} · Due <span class="fw-semibold">{{ a.due_date.strftime("%Y-%m-%d %H:%M") }}</span>{% endif %}
+              </div>
+              <div class="mt-2 d-flex flex-wrap gap-2">
+                {% if a.allow_text %}<span class="badge text-bg-light border">Type online</span>{% endif %}
+                {% if a.allow_pdf %}<span class="badge text-bg-light border">PDF upload</span>{% endif %}
+                {% if a.max_score %}<span class="badge text-bg-light border">Max: {{ a.max_score }}</span>{% endif %}
+              </div>
+            </div>
+            <div>
+              <a class="btn btn-primary btn-sm" href="{{ url_for('submit_assignment', assignment_id=a.id) }}">View / Submit</a>
+            </div>
+          </div>
+
+          <!-- Instructions (always visible, with optional expand) -->
+          <div class="mt-3">
+            {% set plain = a.description or '' %}
+            {% if plain|length > 320 %}
+              <div class="desc-clamp">{{ plain }}</div>
+              <details class="mt-1">
+                <summary class="small text-primary">Show full instructions</summary>
+                <div class="mt-2">{{ plain.replace('\n','<br>')|safe }}</div>
+              </details>
+            {% else %}
+              <div>{{ plain.replace('\n','<br>')|safe }}</div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="card p-4 text-center">
+    <div class="text-muted">No assignments yet.</div>
+  </div>
+{% endif %}
+{% endblock %}

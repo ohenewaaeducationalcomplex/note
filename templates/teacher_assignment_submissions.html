@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}Submissions • {{ a.title }}{% endblock %}
+
+{% block content %}
+<style>
+  .sec { border:1px solid rgba(0,0,0,.06); border-radius:16px; box-shadow:0 8px 24px rgba(0,0,0,.05); }
+  .table thead th { font-weight:700; }
+  .badge-soft {
+    background:#eef2ff; color:#1e3a8a; border:1px solid #c7d2fe;
+    font-weight:600;
+  }
+</style>
+
+<div class="d-flex align-items-center justify-content-between mb-3">
+  <div>
+    <h4 class="mb-1">{{ a.title }}</h4>
+    <div class="small text-muted">
+      Class: {{ a.class_name or 'All' }}
+      {% if a.due_date %} • Due: {{ a.due_date.strftime('%Y-%m-%d %H:%M') }}{% endif %}
+      • Max score: {{ a.max_score }}
+      • Allowed: <span class="badge badge-soft">{{ 'Text' if a.allow_text else '' }}{% if a.allow_text and a.allow_pdf %} &amp; {% endif %}{{ 'PDF' if a.allow_pdf else '' }}</span>
+    </div>
+  </div>
+  <a class="btn btn-outline-primary" href="{{ url_for('teacher_assignments') }}">Back to my assignments</a>
+</div>
+
+<div class="card sec p-3">
+  <div class="table-responsive">
+    <table class="table align-middle">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Student</th>
+          <th>Submitted</th>
+          <th>Answer</th>
+          <th>Score</th>
+          <th>Grade</th>
+          <th>Feedback</th>
+          <th class="text-end">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+      {# Each row in "subs" is:
+         (Submission obj,
+          id, submitted_at, text_answer, pdf_path, score, grade, feedback,
+          student_name, student_username) #}
+      {% for s_obj, sid, submitted_at, text_answer, pdf_path, score, grade, feedback, student_name, student_username in subs %}
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td>
+            <div class="fw-semibold">{{ student_name }}</div>
+            <div class="small text-muted">{{ student_username }}</div>
+          </td>
+          <td>
+            {{ submitted_at.strftime('%Y-%m-%d %H:%M') if submitted_at else '-' }}
+          </td>
+          <td>
+            {% if text_answer %}
+              <a href="#" data-bs-toggle="modal" data-bs-target="#ans{{ sid }}">View text</a>
+              <!-- Modal -->
+              <div class="modal fade" id="ans{{ sid }}" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h5 class="modal-title">Text Answer — {{ student_name }}</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body" style="white-space:pre-wrap">
+                      {{ text_answer }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            {% endif %}
+            {% if text_answer and pdf_path %}<br>{% endif %}
+            {% if pdf_path %}
+              <a href="{{ url_for('serve_pdf', filename=pdf_path) }}" target="_blank">Open PDF</a>
+            {% endif %}
+            {% if not text_answer and not pdf_path %}
+              <span class="text-muted">—</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if score is not none %}
+              {{ score }} / {{ a.max_score }}
+            {% else %}
+              <span class="text-muted">—</span>
+            {% endif %}
+          </td>
+          <td>{{ grade or '—' }}</td>
+          <td class="text-truncate" style="max-width:260px">{{ feedback or '—' }}</td>
+          <td class="text-end">
+            <a class="btn btn-sm btn-primary" href="{{ url_for('teacher_grade_submission', submission_id=sid) }}">Mark</a>
+          </td>
+        </tr>
+      {% else %}
+        <tr><td colspan="8" class="text-center text-muted">No submissions yet.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

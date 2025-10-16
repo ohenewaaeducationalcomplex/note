@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Students{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4 class="mb-0">Students</h4>
+  <form class="d-flex" method="get">
+    <input class="form-control me-2" name="q" value="{{ q or '' }}" placeholder="Search name/username/class">
+    <button class="btn btn-outline-primary">Search</button>
+  </form>
+</div>
+
+<div class="card p-3 mb-3">
+  <form class="row g-2" method="post" enctype="multipart/form-data">
+    <input type="hidden" name="mode" value="add_one">
+    <div class="col-md-3"><input name="full_name" class="form-control" placeholder="Full name" required></div>
+    <div class="col-md-3"><input name="username" class="form-control" placeholder="Username" required></div>
+    <div class="col-md-2">
+      <select name="class_name" class="form-select">
+        <option value="">— Class —</option>
+        {% for c in classes %}<option>{{ c.name }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2"><input name="dob" class="form-control" placeholder="YYYY-MM-DD"></div>
+    <div class="col-md-2"><input name="security_pin" class="form-control" placeholder="PIN (opt)"></div>
+    <div class="col-12 d-flex gap-2">
+      <button class="btn btn-primary">Add Student</button>
+      <label class="btn btn-outline-primary mb-0">
+        Import CSV <input type="file" name="csv_file" accept=".csv" hidden onchange="this.form.mode.value='import_csv'; this.form.submit();">
+      </label>
+      <input type="hidden" name="mode" value="add_one">
+    </div>
+  </form>
+</div>
+
+<div class="card p-3">
+  <div class="table-responsive">
+    <table class="table align-middle">
+      <thead><tr><th>#</th><th>Name</th><th>Username</th><th>Class</th><th>DOB</th><th>PIN</th><th></th></tr></thead>
+      <tbody>
+      {% for s in students %}
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td>{{ s.full_name }}</td>
+          <td>{{ s.username }}</td>
+          <td>{{ s.class_name or '—' }}</td>
+          <td>{{ s.dob or '—' }}</td>
+          <td>{{ s.security_pin or '—' }}</td>
+          <td class="text-end">
+            <a class="btn btn-sm btn-outline-primary" href="{{ url_for('admin_student_edit', user_id=s.id) }}">Edit</a>
+            <form method="post" action="{{ url_for('admin_student_delete', user_id=s.id) }}" class="d-inline" onsubmit="return confirm('Delete this student?');">
+              <button class="btn btn-sm btn-outline-danger">Delete</button>
+            </form>
+          </td>
+        </tr>
+      {% else %}
+        <tr><td colspan="7" class="text-center text-muted">No students</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

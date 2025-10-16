@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Attendance History{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4 class="mb-0">Attendance History</h4>
+  <div class="d-flex gap-2">
+    <a class="btn btn-outline-primary btn-sm"
+       href="{{ url_for('admin_attendance_history',
+                        q=q,
+                        date_from=date_from.isoformat(),
+                        date_to=date_to.isoformat(),
+                        format='xlsx') }}">Export Excel</a>
+    <a class="btn btn-outline-primary btn-sm"
+       href="{{ url_for('admin_attendance_history',
+                        q=q,
+                        date_from=date_from.isoformat(),
+                        date_to=date_to.isoformat(),
+                        format='pdf') }}">Export PDF</a>
+  </div>
+</div>
+
+<form class="card p-3 mb-3" method="get">
+  <div class="row g-2">
+    <div class="col-md-4">
+      <label class="form-label">Teacher (name/username)</label>
+      <input class="form-control" name="q" value="{{ q or '' }}" placeholder="e.g. Ama or ama.badu">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">From</label>
+      <input type="date" class="form-control" name="date_from" value="{{ date_from.isoformat() }}">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">To</label>
+      <input type="date" class="form-control" name="date_to" value="{{ date_to.isoformat() }}">
+    </div>
+    <div class="col-md-2 d-flex align-items-end">
+      <button class="btn btn-primary w-100">Filter</button>
+    </div>
+  </div>
+</form>
+
+<div class="card p-3">
+  <div class="table-responsive">
+    <table class="table align-middle">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Teacher</th>
+          <th>Username</th>
+          <th>Sign In</th>
+          <th>Sign Out</th>
+          <th>Hours</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for rec, u in rows %}
+        <tr>
+          <td>{{ rec.date }}</td>
+          <td>{{ u.full_name }}</td>
+          <td>{{ u.username }}</td>
+          <td>{{ rec.sign_in_time or '—' }}</td>
+          <td>{{ rec.sign_out_time or '—' }}</td>
+          <td>
+            {% if rec.sign_in_time and rec.sign_out_time %}
+              {{ ((rec.sign_out_time - rec.sign_in_time).total_seconds() / 3600) | round(2) }}
+            {% else %}—{% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="text-center text-muted">No records for this range.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

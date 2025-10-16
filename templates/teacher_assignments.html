@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Assignments{% endblock %}
+{% block content %}
+<div class="row g-3">
+  <div class="col-lg-5">
+    <div class="card p-3">
+      <h5 class="mb-3">Create Assignment</h5>
+      <form method="post" class="row g-2">
+        <div class="col-12"><input name="title" class="form-control" placeholder="Title" required></div>
+        <div class="col-12"><textarea name="description" class="form-control" rows="4" placeholder="Description" required></textarea></div>
+        <div class="col-6"><label class="form-label">Due date</label><input type="datetime-local" name="due_date" class="form-control"></div>
+        <div class="col-6">
+          <label class="form-label">Class</label>
+          <select name="class_name" class="form-select">
+            <option value="">All Classes</option>
+            {% for c in classes %}<option>{{ c.name }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="col-6">
+          <div class="form-check"><input class="form-check-input" type="checkbox" id="txt" name="allow_text" checked><label class="form-check-label" for="txt">Allow typed answers</label></div>
+          <div class="form-check"><input class="form-check-input" type="checkbox" id="pdf" name="allow_pdf" checked><label class="form-check-label" for="pdf">Allow PDF uploads</label></div>
+        </div>
+        <div class="col-6"><label class="form-label">Max score</label><input type="number" name="max_score" class="form-control" value="100" min="1"></div>
+        <div class="col-12"><button class="btn btn-primary w-100">Create</button></div>
+      </form>
+    </div>
+  </div>
+  <div class="col-lg-7">
+    <div class="card p-3">
+      <h5 class="mb-3">My Assignments</h5>
+      <div class="table-responsive">
+        <table class="table align-middle">
+          <thead><tr><th>#</th><th>Title</th><th>Class</th><th>Due</th><th>Allowed</th><th></th></tr></thead>
+          <tbody>
+            {% for a in assignments %}
+            <tr>
+              <td>{{ loop.index }}</td>
+              <td class="fw-semibold">{{ a.title }}</td>
+              <td>{{ a.class_name or 'All' }}</td>
+              <td>{% if a.due_date %}{{ a.due_date.strftime('%Y-%m-%d %H:%M') }}{% else %}—{% endif %}</td>
+              <td>{{ 'Text' if a.allow_text else '' }}{% if a.allow_text and a.allow_pdf %} &amp; {% endif %}{{ 'PDF' if a.allow_pdf else '' }}</td>
+              <td class="text-end">
+                <a class="btn btn-sm btn-outline-primary" href="{{ url_for('teacher_assignment_submissions', assignment_id=a.id) }}">View</a>
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="6" class="text-center text-muted">No assignments</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

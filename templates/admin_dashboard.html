@@ -1,0 +1,211 @@
+<!-- templates/admin_dashboard.html -->
+{% extends "base.html" %}
+{% block title %}Admin • OHENEWAA EDUCATIONAL COMPLEX{% endblock %}
+
+{% block content %}
+<style>
+  /* === OHENEWAA palette === */
+  :root{
+    --oh-blue:#0b3d91;    /* crest blue */
+    --oh-gold:#f4b400;    /* crest gold */
+    --oh-green:#16a34a;   /* crest green */
+    --oh-blue-50:#f2f6ff;
+    --card-radius:18px;
+  }
+
+  /* Background banner */
+  .dash-hero{
+    background: radial-gradient(1200px 500px at -10% -30%, rgba(11,61,145,.18), rgba(11,61,145,0)),
+                linear-gradient(180deg, #ffffff, #f7f9fe);
+    border:1px solid rgba(11,61,145,.06);
+    border-radius: var(--card-radius);
+  }
+  .hero-badge{ background: var(--oh-blue); color:#fff; font-weight:700; border-radius:999px; padding:.35rem .75rem; letter-spacing:.02em; }
+  .hero-title{ font-size: clamp(1.15rem, 1.6vw, 1.35rem); color:#0b1320; margin:0; }
+  .hero-sub{ color:#1f2937; font-size:.95rem; }
+
+  /* KPI cards */
+  .kpi{
+    border:1px solid rgba(11,61,145,.08);
+    border-radius: var(--card-radius);
+    background:#fff;
+    box-shadow: 0 14px 40px rgba(11,61,145,.06);
+    padding:1.1rem 1.1rem;
+  }
+  .kpi .value{ font-size:2rem; font-weight:800; color:#0b1320; line-height:1; }
+  .kpi .label{ margin-top:.25rem; color:#0b1320; font-weight:700; letter-spacing:.02em; }
+  .kpi .pill{ font-size:.75rem; font-weight:700; border-radius:999px; padding:.25rem .5rem; background: var(--oh-gold); color:#0b1320; }
+
+  /* Section cards */
+  .sec-card{ border:1px solid rgba(11,61,145,.08); border-radius: var(--card-radius); background:#fff; box-shadow: 0 10px 32px rgba(11,61,145,.06); }
+  .sec-head{ padding:.9rem 1.1rem; border-bottom:1px dashed rgba(11,61,145,.12); display:flex; align-items:center; justify-content:space-between; }
+  .sec-title{ font-weight:800; color:#0b1320; margin:0; }
+  .sec-tag{ color:#0b3d91; background:#eaf1ff; border:1px solid #cfe0ff; padding:.25rem .6rem; border-radius:999px; font-size:.8rem; }
+
+  /* Tiles */
+  .tile{ height:100%; border:1px dashed rgba(11,61,145,.18); border-radius:14px; padding:.9rem; transition:transform .15s ease, box-shadow .15s ease, background .15s ease; }
+  .tile:hover{ transform:translateY(-3px); background: var(--oh-blue-50); box-shadow:0 14px 34px rgba(11,61,145,.10); }
+  .tile h6{ margin:0 0 .25rem 0; font-weight:800; color:#0b1320; }
+  .tile p{ margin:0; color:#1f2937; font-size:.96rem; }
+
+  /* Buttons — force high contrast text */
+  .btn-oh{ background:var(--oh-blue); border-color:var(--oh-blue); color:#fff !important; }
+  .btn-oh:hover, .btn-oh:focus{ background:#092f72; border-color:#092f72; color:#fff !important; }
+  .btn-oh-outline{ color:var(--oh-blue) !important; border-color:var(--oh-blue); background:#fff; }
+  .btn-oh-outline:hover{ background:var(--oh-blue); color:#fff !important; }
+  .btn-gold{ background:var(--oh-gold); border-color:var(--oh-gold); color:#0b1320 !important; font-weight:800; }
+  .btn-gold:hover{ filter:brightness(.95); color:#0b1320 !important; }
+
+  .crest-lg{ width:64px;height:64px;border-radius:50%;object-fit:cover; background:#fff; border:2px solid var(--oh-gold); box-shadow:0 8px 20px rgba(0,0,0,.08); }
+</style>
+
+<!-- Hero -->
+<div class="dash-hero p-3 p-md-4 mb-4">
+  <div class="d-flex flex-wrap align-items-center gap-3">
+    <img src="{{ url_for('static', filename='img/crest.png') }}" alt="crest" class="crest-lg">
+    <div class="flex-grow-1">
+      <div class="d-flex align-items-center gap-2 mb-1">
+        <span class="hero-badge">ADMIN</span>
+        <span class="hero-sub">Welcome, {{ current_user.full_name }}</span>
+      </div>
+      <p class="hero-title">OHENEWAA EDUCATIONAL COMPLEX — Dashboard</p>
+      <div class="hero-sub">Education for Progress • Manage people, classes, notes and attendance from a single place.</div>
+    </div>
+    <div class="d-flex flex-column flex-sm-row gap-2 ms-auto">
+      <a class="btn btn-oh-outline" href="{{ url_for('admin_attendance') }}">Attendance</a>
+      <a class="btn btn-oh-outline" href="{{ url_for('admin_catalogs') }}">Catalogs</a>
+    </div>
+  </div>
+</div>
+
+<!-- KPIs -->
+<div class="row g-3 mb-3">
+  <div class="col-6 col-md-3">
+    <div class="kpi">
+      <div class="d-flex justify-content-between align-items-start">
+        <div>
+          <div class="value">{{ teachers }}</div>
+          <div class="label">Teachers</div>
+        </div>
+        <span class="pill">Staff</span>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="kpi">
+      <div class="d-flex justify-content-between align-items-start">
+        <div>
+          <div class="value">{{ students }}</div>
+          <div class="label">Students</div>
+        </div>
+        <span class="pill" style="background:var(--oh-green); color:#fff;">Learners</span>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="kpi">
+      <div class="d-flex justify-content-between align-items-start">
+        <div>
+          <div class="value">{{ assignments }}</div>
+          <div class="label">Assignments</div>
+        </div>
+        <span class="pill">Academic</span>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="kpi">
+      <div class="d-flex justify-content-between align-items-start">
+        <div>
+          <div class="value">{{ notes_pending }}</div>
+          <div class="label">Notes Pending</div>
+        </div>
+        <span class="pill" style="background:#fde68a;">Quality</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Two focused sections: Management & Quality -->
+<div class="row g-3">
+  <!-- Management -->
+  <div class="col-lg-7">
+    <div class="sec-card">
+      <div class="sec-head">
+        <h5 class="sec-title mb-0">Management</h5>
+        <span class="sec-tag">People & Structure</span>
+      </div>
+      <div class="p-3">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <a href="{{ url_for('admin_students') }}" class="text-decoration-none text-reset">
+              <div class="tile">
+                <h6>Students</h6>
+                <p>Add, edit, or bulk-import learners (CSV). Assign classes and default passwords.</p>
+                <div class="mt-2">
+                  <span class="btn btn-oh btn-sm">Open Students</span>
+                </div>
+              </div>
+            </a>
+          </div>
+          <div class="col-md-6">
+            <a href="{{ url_for('admin_teachers') }}" class="text-decoration-none text-reset">
+              <div class="tile">
+                <h6>Teachers</h6>
+                <p>Create or import teachers, edit profiles and security pins, and manage access.</p>
+                <div class="mt-2">
+                  <span class="btn btn-oh btn-sm">Open Teachers</span>
+                </div>
+              </div>
+            </a>
+          </div>
+          <div class="col-md-12">
+            <a href="{{ url_for('admin_catalogs') }}" class="text-decoration-none text-reset">
+              <div class="tile">
+                <h6>Classes & Subjects</h6>
+                <p>Maintain official class list and subject offerings per class to streamline assignments.</p>
+                <div class="mt-2">
+                  <span class="btn btn-oh btn-sm">Manage Catalogs</span>
+                </div>
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quality & Attendance -->
+  <div class="col-lg-5">
+    <div class="sec-card mb-3">
+      <div class="sec-head">
+        <h5 class="sec-title mb-0">Lesson Notes</h5>
+        <span class="sec-tag">Quality Assurance</span>
+      </div>
+      <div class="p-3">
+        <p class="mb-2" style="color:#0b1320;">Approve or request revisions. Pending right now: <strong>{{ notes_pending }}</strong>.</p>
+        <a href="{{ url_for('admin_lesson_notes') }}" class="btn btn-gold">Review Notes</a>
+      </div>
+    </div>
+
+    <div class="sec-card">
+      <div class="sec-head">
+        <h5 class="sec-title mb-0">Attendance</h5>
+        <span class="sec-tag">This Week</span>
+      </div>
+      <div class="p-3">
+        <form class="row g-2" action="{{ url_for('admin_attendance') }}" method="get">
+          <div class="col-7">
+            <label class="form-label small mb-1">Pick Day</label>
+            <input type="date" class="form-control" name="day" value="{{ today_iso }}">
+          </div>
+          <div class="col-5 d-flex align-items-end">
+            <button class="btn btn-oh w-100">Open Attendance</button>
+          </div>
+        </form>
+        <div class="small text-muted mt-2">Export weekly summaries to Excel or PDF from the attendance page.</div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
